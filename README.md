@@ -10,7 +10,8 @@ A standalone, one-stop tool that carries customer data from **any source system*
 | **Manifest** | Results per item and step, ID register, reconciliation, exceptions, Excel export | Planned |
 | **Return Crossing** | Roll back selected contracts or users through the vendor delete API | Planned |
 
-The full design is in [docs/DESIGN.md](docs/DESIGN.md).
+The full design is in [docs/DESIGN.md](docs/DESIGN.md). How the console is built, and how to add a
+feature to it, is in [docs/CONSOLE.md](docs/CONSOLE.md).
 
 ## Run it
 

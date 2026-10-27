@@ -1,0 +1,152 @@
+/*
+ * Design tokens — Avenza black and orange.
+ * Values follow the Avenza design system (ink ramp, brand ramp #F28500, Sora / Inter / JetBrains Mono).
+ * Components use the semantic tokens only; the raw ramps exist so the semantics can be re-pointed.
+ *
+ * Colour roles:
+ *   accent  — Avenza orange: primary actions, current navigation, focus, brand marks.
+ *   live    — red, reserved for "live calls are on". Never orange, so it cannot be mistaken for branding.
+ *   ok / warn / danger / info — states, independent of the brand.
+ */
+:root {
+  /* Raw ramps */
+  --ink-950: #0f131c;
+  --ink-900: #161b26;
+  --ink-850: #1b212e;
+  --ink-800: #212836;
+  --ink-700: #2c3444;
+  --ink-600: #3a4358;
+  --ink-500: #5d6675;
+  --ink-400: #8b93a3;
+  --ink-300: #c3c9d4;
+  --brand-800: #9a5400;
+  --brand-700: #c96e00;
+  --brand-600: #f28500;
+  --brand-500: #ff9a24;
+  --brand-400: #ffb259;
+  --brand-300: #ffc988;
+
+  /* Type */
+  --font-display: "Sora", "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  --text-xs: 11.5px;
+  --text-sm: 13px;
+  --text-md: 14px;
+  --text-lg: 16px;
+  --text-xl: 20px;
+  --text-2xl: 26px;
+
+  /* Shape and motion */
+  --radius-sm: 6px;
+  --radius: 10px;
+  --radius-lg: 14px;
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --dur: 180ms;
+  --sidebar-w: 256px;
+  --sidebar-w-collapsed: 72px;
+  --topbar-h: 60px;
+
+  /* Chrome: the sidebar stays Avenza black in both themes */
+  --chrome-bg: var(--ink-950);
+  --chrome-bg-2: var(--ink-900);
+  --chrome-text: #e6e9ef;
+  --chrome-muted: var(--ink-400);
+  --chrome-line: rgba(255, 255, 255, 0.07);
+  --chrome-hover: rgba(255, 255, 255, 0.05);
+  --chrome-active: rgba(242, 133, 0, 0.14);
+
+  /* Light theme (default) */
+  --bg: #f4f5f7;
+  --surface: #ffffff;
+  --surface-2: #f8f9fb;
+  --surface-sunken: #eef0f3;
+  --text: var(--ink-900);
+  --text-2: #39404e;
+  --muted: #626a78;
+  --faint: #949bab;
+  --line: rgba(22, 27, 38, 0.1);
+  --line-strong: rgba(22, 27, 38, 0.18);
+  --accent: var(--brand-600);
+  --accent-hover: var(--brand-700);
+  --accent-text: var(--brand-800);
+  --accent-soft: #fff1de;
+  --on-accent: var(--ink-900);
+  --ok: #157f3c;
+  --ok-soft: #e6f5ec;
+  --warn: #9a6700;
+  --warn-soft: #fff6d6;
+  --danger: #c4282d;
+  --danger-soft: #fdecec;
+  --info: #2a5bd7;
+  --info-soft: #eaf0ff;
+  --live: #e5484d;
+  --shadow-sm: 0 1px 2px rgba(15, 19, 28, 0.06);
+  --shadow: 0 1px 2px rgba(15, 19, 28, 0.05), 0 6px 20px -8px rgba(15, 19, 28, 0.12);
+  --focus: 0 0 0 3px rgba(242, 133, 0, 0.35);
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #11151e;
+    --surface: var(--ink-900);
+    --surface-2: var(--ink-850);
+    --surface-sunken: var(--ink-950);
+    --text: #f2f4f7;
+    --text-2: var(--ink-300);
+    --muted: var(--ink-400);
+    --faint: var(--ink-500);
+    --line: rgba(255, 255, 255, 0.08);
+    --line-strong: rgba(255, 255, 255, 0.15);
+    --accent: var(--brand-600);
+    --accent-hover: var(--brand-500);
+    --accent-text: var(--brand-400);
+    --accent-soft: rgba(242, 133, 0, 0.14);
+    --on-accent: var(--ink-950);
+    --ok: #34d399;
+    --ok-soft: rgba(52, 211, 153, 0.12);
+    --warn: #fbbf24;
+    --warn-soft: rgba(251, 191, 36, 0.12);
+    --danger: #f87171;
+    --danger-soft: rgba(248, 113, 113, 0.12);
+    --info: #7aa2ff;
+    --info-soft: rgba(122, 162, 255, 0.12);
+    --live: #ff5c61;
+    --chrome-bg: #0b0e15;
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.35), 0 10px 28px -10px rgba(0, 0, 0, 0.6);
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme="dark"] {
+  --bg: #11151e;
+  --surface: var(--ink-900);
+  --surface-2: var(--ink-850);
+  --surface-sunken: var(--ink-950);
+  --text: #f2f4f7;
+  --text-2: var(--ink-300);
+  --muted: var(--ink-400);
+  --faint: var(--ink-500);
+  --line: rgba(255, 255, 255, 0.08);
+  --line-strong: rgba(255, 255, 255, 0.15);
+  --accent: var(--brand-600);
+  --accent-hover: var(--brand-500);
+  --accent-text: var(--brand-400);
+  --accent-soft: rgba(242, 133, 0, 0.14);
+  --on-accent: var(--ink-950);
+  --ok: #34d399;
+  --ok-soft: rgba(52, 211, 153, 0.12);
+  --warn: #fbbf24;
+  --warn-soft: rgba(251, 191, 36, 0.12);
+  --danger: #f87171;
+  --danger-soft: rgba(248, 113, 113, 0.12);
+  --info: #7aa2ff;
+  --info-soft: rgba(122, 162, 255, 0.12);
+  --live: #ff5c61;
+  --chrome-bg: #0b0e15;
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.35), 0 10px 28px -10px rgba(0, 0, 0, 0.6);
+  color-scheme: dark;
+}

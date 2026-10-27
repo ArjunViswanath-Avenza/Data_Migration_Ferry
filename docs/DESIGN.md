@@ -108,7 +108,7 @@ Java 17 + Spring Boot 3 backend, React + Vite console, embedded H2 for the run s
 Data_Migration_Ferry/
 ├── docs/                 design, user guide
 ├── ferry-server/         Spring Boot: boarding, crossing, manifest, return-crossing, target adapters
-├── ferry-console/        React console
+├── ferry-console/        React console: one folder per module (see CONSOLE.md)
 ├── config/               the JSON files in section 7, with neutral examples
 └── samples/              neutral source templates and synthetic test data
 ```
