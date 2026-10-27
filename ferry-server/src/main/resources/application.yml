@@ -1,0 +1,28 @@
+server:
+  port: ${FERRY_PORT:8095}
+
+spring:
+  application:
+    name: data-migration-ferry
+  servlet:
+    multipart:
+      max-file-size: 200MB
+      max-request-size: 200MB
+  # The embedded run store and ID register are built in core/DataSourceConfig from ferry.data-dir
+  # (a git-ignored folder, because it can hold customer data).
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:schema.sql
+
+ferry:
+  version: 0.1.0
+  config-dir: ${FERRY_CONFIG_DIR:../config}
+  data-dir: ${FERRY_DATA_DIR:./data}
+  # Blank means: use "active" from environments.json
+  environment: ${FERRY_ENV:}
+  cors-origin: ${FERRY_CONSOLE_ORIGIN:http://localhost:5190}
+
+logging:
+  level:
+    com.dataferry: INFO

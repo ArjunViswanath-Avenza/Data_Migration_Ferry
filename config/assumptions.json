@@ -1,0 +1,172 @@
+{
+  "_comment": "The assumptions register. Each entry is a question the vendor material does not settle. 'choice' is what the tool does today; change it from the console (Settings) and every record that relied on it is listed for re-checking. Status: ASSUMED (our default), CONFIRMED (answered by vendor or bank), OVERRIDDEN (changed by us).",
+  "version": "1",
+  "assumptions": [
+    {
+      "id": "A-01",
+      "title": "Linked or virtual users",
+      "question": "Can the target read a user's customer record from the source core, so LinkUserToContract can create the user from a CIF?",
+      "evidence": "Vendor guide lists the backend for LinkUserToContract as 'PartyMS, T24 User API' and error ERR_10001 'Customer details are not present in T24'; prerequisites say 'T24 or Party or the core system used'.",
+      "defaultChoice": "PER_RECORD",
+      "choice": "PER_RECORD",
+      "options": [
+        { "value": "PER_RECORD", "label": "Link the user by CIF when the source gives one; otherwise create a virtual user" },
+        { "value": "ALWAYS_VIRTUAL", "label": "Create every user as a virtual user" }
+      ],
+      "affects": ["Boarding: user checks", "Plan: user steps"],
+      "status": "ASSUMED"
+    },
+    {
+      "id": "A-02",
+      "title": "groupRule format",
+      "question": "Is each number in a groupRule row a 1/0 flag for the group, or the number of approvals needed from it?",
+      "evidence": "Vendor API reference shows groupRule \"[[0],[2]]\" for 2 groups; the vendor's worked SME example shows \"[[0,1,0,0],[1,0,0,0]]\" for 4 groups.",
+      "defaultChoice": "FLAGS",
+      "choice": "FLAGS",
+      "options": [
+        { "value": "FLAGS", "label": "1/0 flag per group; rules needing more than one approval from the same group are parked" },
+        { "value": "COUNTS", "label": "Number of approvals needed from each group" }
+      ],
+      "affects": ["Plan: approval rules (build step 5)"],
+      "status": "ASSUMED"
+    },
+    {
+      "id": "A-03",
+      "title": "Amount bracket boundaries",
+      "question": "Do neighbouring amount brackets share the boundary value, or does the next bracket start at the previous upper limit + 1?",
+      "evidence": "Vendor guide example: -1.00 to 5, then 5 to -1.00. Vendor Postman sample: -1.00 to 10, then 10 to -1.00.",
+      "defaultChoice": "SHARED_BOUNDARY",
+      "choice": "SHARED_BOUNDARY",
+      "options": [
+        { "value": "SHARED_BOUNDARY", "label": "Next bracket starts at the previous upper limit (vendor examples)" },
+        { "value": "UPPER_PLUS_ONE", "label": "Next bracket starts at the previous upper limit + 1" }
+      ],
+      "affects": ["Plan: approval rules (build step 5)"],
+      "status": "ASSUMED"
+    },
+    {
+      "id": "A-04",
+      "title": "Ranges that need no approval",
+      "question": "How should an amount range that needs no approval be sent?",
+      "evidence": "Vendor Postman sends approvalruleId NO_APPROVAL with empty approvers and isGroupMatrix; its saved response is error 87115. The vendor guide does not document either field.",
+      "defaultChoice": "OMIT",
+      "choice": "OMIT",
+      "options": [
+        { "value": "OMIT", "label": "Do not send the range" },
+        { "value": "NO_APPROVAL", "label": "Send it with approvalruleId NO_APPROVAL" }
+      ],
+      "affects": ["Plan: approval rules (build step 5)"],
+      "status": "ASSUMED"
+    },
+    {
+      "id": "A-05",
+      "title": "Rules for all transaction types",
+      "question": "How many CreateApprovalMatrixRule calls does a source rule that covers all transaction types become?",
+      "evidence": "Vendor API needs one actionId and one limitTypeId per call; a vendor Postman note gives approvalActionsPerCif = 78 for one service definition.",
+      "defaultChoice": "EXPAND_PER_SERVICE_DEFINITION",
+      "choice": "EXPAND_PER_SERVICE_DEFINITION",
+      "options": [
+        { "value": "EXPAND_PER_SERVICE_DEFINITION", "label": "One call per action in the list configured for the contract's service definition" }
+      ],
+      "affects": ["Plan: approval rules (build step 5)"],
+      "status": "ASSUMED"
+    },
+    {
+      "id": "A-06",
+      "title": "Rules for actions that move no money",
+      "question": "Which limitTypeId and limits should be sent for actions that move no money, such as statement requests?",
+      "evidence": "Vendor API marks limitTypeId and limits as mandatory; every vendor sample uses MAX_TRANSACTION_LIMIT with amounts.",
+      "defaultChoice": "PARK",
+      "choice": "PARK",
+      "options": [
+        { "value": "PARK", "label": "Park the rule for review" },
+        { "value": "SEND_WITH_LIMIT_TYPE", "label": "Send with the limit type configured for the action, from -1.00 to -1.00" }
+      ],
+      "affects": ["Plan: approval rules (build step 5)"],
+      "status": "ASSUMED"
+    },
+    {
+      "id": "A-07",
+      "title": "Contract name clashes",
+      "question": "What makes two contracts clash on name, given that CreateContract takes no name?",
+      "evidence": "Vendor Postman saved response for CreateContract: dbpErrCode 21967 with inner ErrorCode 10401 'A contract is already existing with given name'.",
+      "defaultChoice": "OWN_OUTCOME",
+      "choice": "OWN_OUTCOME",
+      "options": [
+        { "value": "OWN_OUTCOME", "label": "Report it as its own outcome; never retry automatically" }
+      ],
+      "affects": ["Crossing: contract step (build step 3)"],
+      "status": "ASSUMED"
+    },
+    {
+      "id": "A-08",
+      "title": "Virtual users with blank mandatory fields",
+      "question": "Can the fields the vendor marks mandatory for CreateVirtualUser (middle name, tax ID, date of birth, email …) be sent blank?",
+      "evidence": "Vendor guide marks all personal fields of CreateVirtualUser as Mandatory; the DATAMIGRATION_EMAIL_OPTIONAL setting covers email only.",
+      "defaultChoice": "BLOCK",
+      "choice": "BLOCK",
+      "options": [
+        { "value": "BLOCK", "label": "Block the user until the fields are filled" },
+        { "value": "SEND_BLANK", "label": "Send the missing fields blank and flag the user" }
+      ],
+      "affects": ["Boarding: user checks", "Plan: user steps"],
+      "status": "ASSUMED"
+    },
+    {
+      "id": "A-09",
+      "title": "Accounts under more than one contract",
+      "question": "Can one account belong to two contracts (joint accounts)?",
+      "evidence": "Earlier vendor guidance: one account cannot be part of another contract at contract creation; joint accounts were synced at first login instead. The current guide does not say.",
+      "defaultChoice": "EXCLUDE",
+      "choice": "EXCLUDE",
+      "options": [
+        { "value": "EXCLUDE", "label": "Leave the account out of every contract and list it" },
+        { "value": "INCLUDE", "label": "Include it in each contract" }
+      ],
+      "affects": ["Boarding: account checks", "Plan: contract step"],
+      "status": "ASSUMED"
+    },
+    {
+      "id": "A-10",
+      "title": "What counts as success",
+      "question": "Which response fields decide that a call succeeded?",
+      "evidence": "Vendor Postman saved failures return opstatus 0 together with dbpErrCode; the guide says opstatus 0 means success.",
+      "defaultChoice": "OPSTATUS_ZERO_AND_NO_ERROR_CODE",
+      "choice": "OPSTATUS_ZERO_AND_NO_ERROR_CODE",
+      "options": [
+        { "value": "OPSTATUS_ZERO_AND_NO_ERROR_CODE", "label": "opstatus is 0 and no dbpErrCode, dbpErrMsg or errmsg (fields set in target-temenos.json)" }
+      ],
+      "affects": ["Crossing: every step (build step 3)"],
+      "status": "ASSUMED"
+    },
+    {
+      "id": "A-11",
+      "title": "Safe parallelism",
+      "question": "How many contracts can be sent to the target at the same time?",
+      "evidence": "Vendor guide: the APIs take a single record at a time; no concurrency figure is given.",
+      "defaultChoice": "4",
+      "choice": "4",
+      "options": [
+        { "value": "1", "label": "One contract at a time" },
+        { "value": "2", "label": "2 contracts at a time" },
+        { "value": "4", "label": "4 contracts at a time" },
+        { "value": "8", "label": "8 contracts at a time" }
+      ],
+      "affects": ["Crossing: run speed (build step 3)"],
+      "status": "ASSUMED"
+    },
+    {
+      "id": "A-12",
+      "title": "Rollback method",
+      "question": "Does the vendor delete API remove everything the migration APIs create?",
+      "evidence": "Vendor guide: 'Failed records can be remediated by using the existing rollback API'; DeleteMigratedData takes apis, contractId, customerId and cif. Coverage per API is not listed.",
+      "defaultChoice": "VENDOR_DELETE",
+      "choice": "VENDOR_DELETE",
+      "options": [
+        { "value": "VENDOR_DELETE", "label": "Use DeleteMigratedData, limited to IDs in the ID register" }
+      ],
+      "affects": ["Return Crossing (build step 7)"],
+      "status": "ASSUMED"
+    }
+  ]
+}

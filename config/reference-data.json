@@ -1,0 +1,14 @@
+{
+  "_comment": "Translates the references used in source files into the IDs the target system uses. The values below are neutral examples: replace targetId with the IDs configured in your target (Spotlight / DBXDB).",
+  "serviceDefinitions": [
+    { "ref": "RETAIL",   "targetId": "sd-retail-example",   "label": "Retail online banking",   "contractType": "RETAIL" },
+    { "ref": "BUSINESS", "targetId": "sd-business-example", "label": "Business online banking", "contractType": "BUSINESS" }
+  ],
+  "roles": [
+    { "ref": "ADMIN",      "targetId": "GROUP_ADMINISTRATOR", "label": "Administrator" },
+    { "ref": "ACCOUNTANT", "targetId": "GROUP_ACCOUNTANT",    "label": "Accountant" },
+    { "ref": "USER",       "targetId": "DEFAULT_GROUP",       "label": "Standard user" }
+  ],
+  "_codeMapsComment": "codeMaps holds named lookup tables used by later build steps, e.g. \"txnCodeToAction\": { \"OAT\": \"TRANSFER_BETWEEN_OWN_ACCOUNT_CREATE\" }.",
+  "codeMaps": {}
+}

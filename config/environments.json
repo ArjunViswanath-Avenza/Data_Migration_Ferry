@@ -1,0 +1,30 @@
+{
+  "_comment": "Target environments. No secrets here: app key and secret are read from the environment variables named below, at run time only. Nothing is ever sent to an environment while liveCalls is false.",
+  "active": "local-mock",
+  "environments": [
+    {
+      "id": "local-mock",
+      "label": "Local mock target",
+      "target": "temenos-datamigration",
+      "authUrl": "http://localhost:8095/mock/login",
+      "hostUrl": "http://localhost:8095/mock",
+      "defaultLegalEntityId": "LE0001",
+      "liveCalls": false,
+      "appKeyVariable": "FERRY_APP_KEY",
+      "appSecretVariable": "FERRY_APP_SECRET",
+      "notes": "Stand-in for the vendor APIs, so every flow can be tested without a real environment (build step 8)."
+    },
+    {
+      "id": "example-uat",
+      "label": "Example bank — UAT",
+      "target": "temenos-datamigration",
+      "authUrl": "https://auth.example-bank.test/login",
+      "hostUrl": "https://digital-uat.example-bank.test",
+      "defaultLegalEntityId": "LE0001",
+      "liveCalls": false,
+      "appKeyVariable": "FERRY_APP_KEY",
+      "appSecretVariable": "FERRY_APP_SECRET",
+      "notes": "Template for a real environment. Copy it, set the addresses and legal entity, and switch liveCalls on only when you intend to write to it."
+    }
+  ]
+}

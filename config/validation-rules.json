@@ -1,0 +1,44 @@
+{
+  "_comment": "Field-level checks per record type. ERROR blocks the record; WARN is reported only. Types: required, allowed (uses the allowed lists in the canonical model), regex, unique (optionally within a scope field), length, date (yyyy-MM-dd after mapping), conditional-required. Checks across record types (an account's contract exists, a user's role is configured …) are built in.",
+  "version": "1",
+  "rules": [
+    { "id": "CONTRACT_REQUIRED", "recordType": "CONTRACT", "type": "required",
+      "fields": ["contractRef", "serviceDefinitionRef", "primaryCif"] },
+    { "id": "CONTRACT_UNIQUE", "recordType": "CONTRACT", "type": "unique", "field": "contractRef",
+      "message": "The same contract appears more than once in this batch." },
+    { "id": "CONTRACT_ALLOWED", "recordType": "CONTRACT", "type": "allowed" },
+    { "id": "CONTRACT_CIF_FORMAT", "recordType": "CONTRACT", "type": "regex", "field": "primaryCif",
+      "pattern": "^[A-Za-z0-9_-]{1,40}$", "message": "CIF must be 1–40 letters, digits, hyphens or underscores." },
+    { "id": "CONTRACT_EMAIL_FORMAT", "recordType": "CONTRACT", "type": "regex", "field": "email", "severity": "WARN",
+      "pattern": "^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$", "message": "Email does not look valid; contract communication may be rejected." },
+    { "id": "CONTRACT_PHONE_FORMAT", "recordType": "CONTRACT", "type": "regex", "field": "phoneNumber", "severity": "WARN",
+      "pattern": "^[0-9]{5,15}$", "message": "Phone number should be 5–15 digits." },
+
+    { "id": "ACCOUNT_REQUIRED", "recordType": "ACCOUNT", "type": "required",
+      "fields": ["contractRef", "cif", "accountId"] },
+    { "id": "ACCOUNT_UNIQUE_IN_CONTRACT", "recordType": "ACCOUNT", "type": "unique", "field": "accountId", "scope": "contractRef",
+      "message": "The same account is listed twice for this contract." },
+    { "id": "ACCOUNT_CIF_FORMAT", "recordType": "ACCOUNT", "type": "regex", "field": "cif",
+      "pattern": "^[A-Za-z0-9_-]{1,40}$", "message": "CIF must be 1–40 letters, digits, hyphens or underscores." },
+
+    { "id": "USER_REQUIRED", "recordType": "USER", "type": "required",
+      "fields": ["userRef", "contractRef", "roleRef"] },
+    { "id": "USER_UNIQUE", "recordType": "USER", "type": "unique", "field": "userRef",
+      "message": "The same user appears more than once in this batch." },
+    { "id": "USER_ALLOWED", "recordType": "USER", "type": "allowed" },
+    { "id": "USER_DOB_DATE", "recordType": "USER", "type": "date", "field": "dateOfBirth",
+      "message": "Date of birth must be a real date in yyyy-MM-dd form (set a date transform in the mapping profile if the source uses another format)." },
+    { "id": "USER_EMAIL_FORMAT", "recordType": "USER", "type": "regex", "field": "email", "severity": "WARN",
+      "pattern": "^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$", "message": "Email does not look valid." },
+    { "id": "USER_PHONE_FORMAT", "recordType": "USER", "type": "regex", "field": "phone", "severity": "WARN",
+      "pattern": "^[0-9]{5,15}$", "message": "Phone should be 5–15 digits." },
+    { "id": "USER_LEGACY_NAME", "recordType": "USER", "type": "regex", "field": "legacyUserName", "severity": "WARN",
+      "pattern": "^[A-Za-z0-9._@-]{1,64}$", "message": "Legacy user name has characters the target may refuse." },
+
+    { "id": "GROUP_REQUIRED", "recordType": "SIGNATORY_GROUP", "type": "required",
+      "fields": ["groupRef", "contractRef", "groupName", "userRef"] },
+    { "id": "GROUP_MEMBER_UNIQUE", "recordType": "SIGNATORY_GROUP", "type": "unique", "field": "userRef", "scope": "groupRef",
+      "message": "The same user is listed twice in this group." },
+    { "id": "GROUP_NAME_LENGTH", "recordType": "SIGNATORY_GROUP", "type": "length", "field": "groupName", "min": 1, "max": 100 }
+  ]
+}
