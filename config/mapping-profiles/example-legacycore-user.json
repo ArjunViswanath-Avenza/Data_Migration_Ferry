@@ -1,0 +1,33 @@
+{
+  "_comment": "Example: a fictional core system ('LEGACYCORE') exporting users with its own column names and codes. Copy this file to onboard a real source system; no code change is needed.",
+  "id": "example-legacycore-user",
+  "sourceSystem": "LEGACYCORE",
+  "recordType": "USER",
+  "description": "Users from the LEGACYCORE user export (samples/legacy-core/users_export.csv).",
+  "columns": {
+    "LOGIN_ID": "userRef",
+    "CONTRACT_NO": "contractRef",
+    "ROLE_CODE": "roleRef",
+    "USER_KIND": "userType",
+    "CUST_NO": "cif",
+    "FIRST_NM": "firstName",
+    "MIDDLE_NM": "middleName",
+    "LAST_NM": "lastName",
+    "EMAIL_ADDR": "email",
+    "MOBILE": "phone",
+    "BIRTH_DT": "dateOfBirth",
+    "NATIONAL_ID": "taxId"
+  },
+  "defaults": {
+    "phoneCountryCode": "95"
+  },
+  "transforms": {
+    "phone": "digits",
+    "dateOfBirth": "date:dd/MM/yyyy",
+    "email": "lower"
+  },
+  "valueMaps": {
+    "userType": { "C": "LINKED", "N": "VIRTUAL" },
+    "roleRef": { "A": "ADMIN", "U": "USER", "F": "ACCOUNTANT" }
+  }
+}

@@ -1,0 +1,83 @@
+{
+  "_comment": "The canonical model every source system maps onto. It is product-level (the shape of a Temenos Digital migration), not bank-specific: banks adapt through mapping profiles in config/mapping-profiles. Order of record types = order of sheets in the template workbook.",
+  "version": "1",
+  "recordTypes": {
+    "CONTRACT": {
+      "label": "Contracts",
+      "sheet": "Contracts",
+      "keyFields": ["contractRef"],
+      "contractField": "contractRef",
+      "description": "One row per contract. A contract is what customers sign in under; it holds one or more CIFs and their accounts.",
+      "fields": [
+        { "name": "contractRef", "label": "Contract Ref", "required": true, "note": "Your identifier for the contract; often the primary CIF. Used to link accounts, users and groups." },
+        { "name": "serviceDefinitionRef", "label": "Service Definition", "required": true, "note": "A ref from reference-data.json, e.g. RETAIL or BUSINESS." },
+        { "name": "primaryCif", "label": "Primary CIF", "required": true, "note": "Format the column as Text so leading zeros survive." },
+        { "name": "legalEntityRef", "label": "Legal Entity", "note": "Blank uses the environment's default legal entity." },
+        { "name": "email", "label": "Email", "note": "Contract communication. Blank lets the target use the primary CIF's details." },
+        { "name": "phoneCountryCode", "label": "Phone Country Code" },
+        { "name": "phoneNumber", "label": "Phone Number" },
+        { "name": "addressLine1", "label": "Address Line 1" },
+        { "name": "addressLine2", "label": "Address Line 2" },
+        { "name": "city", "label": "City" },
+        { "name": "state", "label": "State" },
+        { "name": "country", "label": "Country" },
+        { "name": "zipCode", "label": "Zip Code" },
+        { "name": "faxId", "label": "Fax" }
+      ]
+    },
+    "ACCOUNT": {
+      "label": "Accounts",
+      "sheet": "Accounts",
+      "keyFields": ["contractRef", "accountId"],
+      "contractField": "contractRef",
+      "description": "One row per account on a contract. Each account sits under the CIF that owns it; every CIF on a contract needs at least one account.",
+      "fields": [
+        { "name": "contractRef", "label": "Contract Ref", "required": true },
+        { "name": "cif", "label": "CIF", "required": true, "note": "The CIF that owns the account. Format the column as Text." },
+        { "name": "accountId", "label": "Account ID", "required": true, "note": "Format the column as Text so leading zeros survive." },
+        { "name": "accountName", "label": "Account Name" },
+        { "name": "accountType", "label": "Account Type" },
+        { "name": "currency", "label": "Currency" },
+        { "name": "status", "label": "Account Status" }
+      ]
+    },
+    "USER": {
+      "label": "Users",
+      "sheet": "Users",
+      "keyFields": ["userRef"],
+      "contractField": "contractRef",
+      "description": "One row per person who signs in to a contract. A user with their own CIF is linked; a user without one (staff of a business customer) is created as a virtual user.",
+      "fields": [
+        { "name": "userRef", "label": "User Ref", "required": true, "note": "Your identifier for the user, e.g. the legacy login ID." },
+        { "name": "contractRef", "label": "Contract Ref", "required": true },
+        { "name": "roleRef", "label": "Role", "required": true, "note": "A ref from reference-data.json, e.g. ADMIN." },
+        { "name": "userType", "label": "User Type", "allowed": ["LINKED", "VIRTUAL"], "note": "Blank lets the tool decide (assumption A-01): LINKED when a CIF is given, otherwise VIRTUAL." },
+        { "name": "cif", "label": "User CIF", "note": "The user's own CIF, for linked users." },
+        { "name": "legacyUserName", "label": "Legacy User Name", "note": "Keeps the user's existing login name in the target." },
+        { "name": "firstName", "label": "First Name" },
+        { "name": "middleName", "label": "Middle Name" },
+        { "name": "lastName", "label": "Last Name" },
+        { "name": "email", "label": "Email" },
+        { "name": "phoneCountryCode", "label": "Phone Country Code" },
+        { "name": "phone", "label": "Phone" },
+        { "name": "dateOfBirth", "label": "Date of Birth", "format": "date", "note": "yyyy-MM-dd, or set a date transform in the mapping profile." },
+        { "name": "taxId", "label": "Tax ID", "note": "National ID or tax number." },
+        { "name": "accountIds", "label": "Account IDs", "note": "Comma-separated. Blank gives the user every account on the contract." }
+      ]
+    },
+    "SIGNATORY_GROUP": {
+      "label": "Signatory Groups",
+      "sheet": "Signatory Groups",
+      "keyFields": ["groupRef", "userRef"],
+      "contractField": "contractRef",
+      "description": "Business contracts only. One row per member of a group. A user can belong to only one group on a contract.",
+      "fields": [
+        { "name": "groupRef", "label": "Group Ref", "required": true },
+        { "name": "contractRef", "label": "Contract Ref", "required": true },
+        { "name": "groupName", "label": "Group Name", "required": true, "note": "Letters, digits and spaces only." },
+        { "name": "description", "label": "Description" },
+        { "name": "userRef", "label": "Member User Ref", "required": true }
+      ]
+    }
+  }
+}

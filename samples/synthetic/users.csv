@@ -1,0 +1,10 @@
+User Ref,Contract Ref,Role,User Type,User CIF,Legacy User Name,First Name,Middle Name,Last Name,Email,Phone Country Code,Phone,Date of Birth,Tax ID,Account IDs
+U-R001,R-001,USER,,001000111,anna.lee,Anna,,Lee,anna.lee@example.test,95,9123456701,1985-03-02,,
+U-R001-2,R-001,SUPERUSER,,001000111,anna.backup,Anna,,Lee,anna.lee@example.test,95,9123456701,1985-03-02,,
+U-R002,R-002,USER,,002000222,ko.min,Ko,,Min,,95,9123456704,1979-11-20,,
+U-B100-A,B-100,ADMIN,,045000100,acme.admin,Hla,,Aung,hla@acme.example.test,95,9123456705,1975-06-01,,
+U-B100-M,B-100,ACCOUNTANT,VIRTUAL,,acme.maker,Mya,Thida,Win,mya@acme.example.test,95,9123456710,1990-04-12,12/ABC(N)123456,04510000010001
+U-B100-C,B-100,ACCOUNTANT,,,acme.checker,Zaw,,Oo,zaw@acme.example.test,95,9123456711,1988-01-30,,
+U-B200-A,B-200,ADMIN,,070000300,beta.admin,Su,,Lwin,su@beta.example.test,95,9123456712,1982-09-09,,
+U-B200-B,B-200,USER,LINKED,,beta.user,Tun,,Naing,tun@beta.example.test,95,9123456713,1991-12-24,,
+U-X,R-009,USER,,009000999,ghost.user,No,,Contract,,,,,,

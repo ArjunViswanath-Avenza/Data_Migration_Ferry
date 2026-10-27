@@ -1,0 +1,7 @@
+Contract Ref,Service Definition,Primary CIF,Legal Entity,Email,Phone Country Code,Phone Number,Address Line 1,City,Country
+R-001,RETAIL,001000111,,anna.lee@example.test,95,9123456701,12 Harbour Road,Port Town,MM
+R-002,RETAIL,002000222,,,,,,,
+B-100,BUSINESS,045000100,,finance@acme.example.test,95,9123456702,1 Dock Street,Port Town,MM
+B-200,BUSINESS,070000300,,ops@beta.example.test,95,9123456703,7 Quay Lane,Port Town,MM
+R-003,RETAIL,003000333,,,,,,,
+R-004,PREMIUM,004000444,,,,,,,

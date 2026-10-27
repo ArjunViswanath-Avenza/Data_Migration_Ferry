@@ -1,0 +1,7 @@
+Group Ref,Contract Ref,Group Name,Description,Member User Ref
+G-ACME-A,B-100,Approvers A,Senior approvers,U-B100-A
+G-ACME-A,B-100,Approvers A,Senior approvers,U-B100-M
+G-ACME-B,B-100,Approvers B,,U-B100-C
+G-BETA-1,B-200,Beta Signers,,U-B200-A
+G-BETA-2,B-200,Beta Signers,,U-B200-A
+G-R1,R-001,Family,,U-R001
