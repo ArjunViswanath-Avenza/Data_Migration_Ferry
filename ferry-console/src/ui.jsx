@@ -1,4 +1,5 @@
 // Shared building blocks. Panels use these instead of styling elements themselves.
+import { Component, isValidElement } from "react";
 
 export function Card({ title, sub, actions, children }) {
   return (
@@ -73,8 +74,24 @@ export function Table({ columns, rows, empty = "Nothing to show yet." }) {
 
 function formatCell(v) {
   if (v === null || v === undefined || v === "") return <span className="muted">—</span>;
+  if (isValidElement(v)) return v;
   if (typeof v === "object") return <code>{JSON.stringify(v)}</code>;
   return String(v);
+}
+
+/** Keeps one failing area from blanking the whole console. */
+export class AreaBoundary extends Component {
+  constructor(props) { super(props); this.state = { error: null }; }
+  static getDerivedStateFromError(error) { return { error }; }
+  componentDidUpdate(prev) { if (prev.areaId !== this.props.areaId && this.state.error) this.setState({ error: null }); }
+  render() {
+    if (!this.state.error) return this.props.children;
+    return (
+      <Banner tone="danger" title="This area could not be shown.">
+        {String(this.state.error.message || this.state.error)}. Other areas still work; reload the page to try again.
+      </Banner>
+    );
+  }
 }
 
 export function Field({ label, htmlFor, children }) {

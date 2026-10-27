@@ -8,7 +8,7 @@ const api = process.env.FERRY_API || "http://localhost:8095";
 export default defineConfig({
   plugins: [react()],
   server: {
-    port: 5190,
+    port: 5196,
     strictPort: true,
     proxy: { "/api": { target: api, changeOrigin: true } },
   },

@@ -21,7 +21,7 @@ Needs JDK 17, Maven 3.9 and Node 18+.
 cd ferry-server
 mvn spring-boot:run
 
-# Console (http://localhost:5190), in a second terminal
+# Console (http://localhost:5196), in a second terminal
 cd ferry-console
 npm install
 npm run dev

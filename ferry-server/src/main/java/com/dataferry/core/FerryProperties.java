@@ -15,7 +15,7 @@ public class FerryProperties {
     private String dataDir = "./data";
     /** Target environment id; blank means "active" from environments.json. */
     private String environment = "";
-    private String corsOrigin = "http://localhost:5190";
+    private String corsOrigin = "http://localhost:5196";
 
     public Path configPath() { return Path.of(configDir).toAbsolutePath().normalize(); }
     public Path dataPath() { return Path.of(dataDir).toAbsolutePath().normalize(); }

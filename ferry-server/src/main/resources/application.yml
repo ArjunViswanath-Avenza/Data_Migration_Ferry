@@ -21,7 +21,7 @@ ferry:
   data-dir: ${FERRY_DATA_DIR:./data}
   # Blank means: use "active" from environments.json
   environment: ${FERRY_ENV:}
-  cors-origin: ${FERRY_CONSOLE_ORIGIN:http://localhost:5190}
+  cors-origin: ${FERRY_CONSOLE_ORIGIN:http://localhost:5196}
 
 logging:
   level:

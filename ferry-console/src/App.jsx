@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { api } from "./api.js";
 import { useFerry } from "./state.jsx";
-import { Badge, Banner } from "./ui.jsx";
+import { AreaBoundary, Badge, Banner } from "./ui.jsx";
 import { AREAS } from "./areas/registry.jsx";
 
 /**
@@ -21,6 +21,12 @@ export default function App() {
       .catch((e) => setError(e.message));
 
   useEffect(() => { refreshStatus(); }, []);
+  // The console is often opened before the server has finished starting: keep trying until it answers.
+  useEffect(() => {
+    if (!error) return undefined;
+    const t = setInterval(refreshStatus, 5000);
+    return () => clearInterval(t);
+  }, [error]);
   useEffect(() => { if (location.hash !== `#${areaId}`) history.replaceState(null, "", `#${areaId}`); }, [areaId]);
 
   const area = AREAS.find((a) => a.id === areaId) ?? AREAS[0];
@@ -74,10 +80,12 @@ export default function App() {
           <div className="page">
             {error && (
               <Banner tone="danger" title="The server is not reachable.">
-                {error}. Start it with <code>mvn spring-boot:run</code> in <code>ferry-server</code>, then reload this page.
+                {error}. Start it with <code>mvn spring-boot:run</code> in <code>ferry-server</code>; this page reconnects by itself.
               </Banner>
             )}
-            <Panel onConfigChanged={refreshStatus} />
+            <AreaBoundary areaId={area.id}>
+              <Panel onConfigChanged={refreshStatus} />
+            </AreaBoundary>
           </div>
         </main>
       </div>

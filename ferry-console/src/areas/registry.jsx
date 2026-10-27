@@ -1,5 +1,6 @@
 import Upcoming from "./Upcoming.jsx";
 import Settings from "./Settings.jsx";
+import BoardingPanel from "./boarding/BoardingPanel.jsx";
 
 /**
  * The areas of the console, in the order a migration runs. Adding an area = one entry here plus
@@ -9,7 +10,7 @@ export const AREAS = [
   {
     id: "boarding", group: "migration", label: "Boarding",
     blurb: "Load, map, validate, plan",
-    Component: () => <Upcoming title="Boarding" step="2" text="Load source files, map them to the canonical model, validate them and build a dry-run plan per contract." />,
+    Component: BoardingPanel,
   },
   {
     id: "crossing", group: "migration", label: "Crossing", soon: "Step 3",
