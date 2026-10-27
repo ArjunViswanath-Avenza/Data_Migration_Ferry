@@ -1,0 +1,22 @@
+# Build output
+ferry-server/target/
+ferry-console/node_modules/
+ferry-console/dist/
+
+# Local run data (run store, ID register, uploaded batches) — may contain customer data
+ferry-server/data/
+data/
+
+# Secrets and local overrides
+.env
+.env.*
+!.env.example
+config/local/
+
+# Editors and OS
+.idea/
+.vscode/
+*.iml
+.DS_Store
+Thumbs.db
+*.log
