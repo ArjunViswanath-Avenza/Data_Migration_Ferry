@@ -55,7 +55,7 @@ p, li { max-width: var(--measure); }
 p { margin: 0; }
 a { color: var(--accent-ink); text-underline-offset: 3px; }
 code, .mono { font-family: var(--f-mono); font-size: 0.86em; }
-:not(pre) > code { background: var(--paper-2); border: 1px solid var(--line); border-radius: 5px; padding: 1px 5px; }
+:not(pre) > code { background: var(--paper-2); border: 1px solid var(--line); border-radius: 5px; padding: 1px 5px; overflow-wrap: anywhere; }
 strong { font-weight: 600; color: var(--ink); }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
 
@@ -467,7 +467,7 @@ footer .wrap { display: flex; flex-wrap: wrap; gap: 8px 24px; justify-content: s
     <p class="intro">From reading the vendor material to a working, tested Boarding stage. Seven saved versions of the code, each with a clear purpose.</p>
     <ol class="story">
       <li><span class="when">Before</span><span class="rail"></span><div class="what"><b>Earlier migrations used client-specific tooling</b><span>Earlier work relied on a tool and database scripts written for one client. It worked, but could not be reused for another bank, and rollback was hand-built.</span></div></li>
-      <li><span class="when">27 Oct</span><span class="rail"></span><div class="what"><b>Studied the official Temenos method</b><span>We read the Temenos guide "Temenos Digital Data Migration and flows" and its Postman collection, which describe the DataMigration APIs, their order and their payloads. Points that were unclear went into a <a href="https://claude.ai/artifact/7F9WP5UFUP195irVnVVjMm">call sheet for the Temenos product team</a>, most critical first.</span></div></li>
+      <li><span class="when">27 Oct</span><span class="rail"></span><div class="what"><b>Studied the official Temenos method</b><span>We read the Temenos guide "Temenos Digital Data Migration and flows" and its Postman collection, which describe the DataMigration APIs, their order and their payloads. Points that were unclear went into a <a href="../temenos-call-sheet.html">call sheet for the Temenos product team</a>, most critical first.</span></div></li>
       <li><span class="when">27 Oct</span><span class="rail"></span><div class="what"><b>Decided to build our own standalone tool</b><span>One tool for any bank and any source system, with no client specifics in the code. Unanswered questions would not block us: each becomes a named assumption, to be confirmed later. Name chosen: <strong>Data Migration Ferry</strong>.</span></div></li>
       <li><span class="when">27 Oct</span><span class="rail"></span><div class="what"><b>Design written and approved</b><span>Five principles, four stages, the standard data model, safety gates, twelve assumptions and an eight-step build order, all in <code>docs/DESIGN.md</code>.</span></div></li>
       <li><span class="when">27 Oct</span><span class="rail"></span><div class="what"><b>Step 1: the skeleton</b><span>The server and the browser console, strict settings files, the run log, the audit trail and the ID register. <code>c43fca5</code> <code>a121058</code></span></div></li>
@@ -1008,7 +1008,7 @@ npm --prefix ferry-console run dev</pre>
 
     <h3>What we need from others</h3>
     <div class="grid">
-      <div class="card"><h4>From Temenos</h4><p>Answers to the open questions on the <a href="https://claude.ai/artifact/7F9WP5UFUP195irVnVVjMm">call sheet</a>. Each answer confirms or switches an assumption.</p></div>
+      <div class="card"><h4>From Temenos</h4><p>Answers to the open questions on the <a href="../temenos-call-sheet.html">call sheet</a>. Each answer confirms or switches an assumption.</p></div>
       <div class="card"><h4>From the bank</h4><p>A UAT environment address and legal entity, the real service definition and role IDs, an app key and secret (typed in at run time), and source data extracts.</p></div>
       <div class="card"><h4>From the project</h4><p>Feedback on Boarding, a go-ahead for Crossing with the mock target, and later a decision on hosting beyond one laptop and user sign-in.</p></div>
     </div>

@@ -1,0 +1,548 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Temenos DataMigration Call Sheet</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: dark header band, one reading column of numbered question cards (most critical first),
+   dot rail on the right on wide screens. Avenza palette, matching docs/guide/ferry-guide.html. */
+:root {
+  --paper: #faf8f5; --paper-2: #f2eee8; --card: #ffffff;
+  --ink: #161b26; --ink-2: #474f60; --ink-3: #7c8496; --line: #e6e1d9;
+  --accent: #f28500; --accent-ink: #9a5400; --accent-soft: #fff1de;
+  --night: #0f131c; --night-2: #1b2130; --on-night: #f3f1ec; --on-night-2: #aab1c0;
+  --must: #c73a3a; --must-bg: #fde8e7; --imp: #9a6a00; --imp-bg: #fff4d6; --good: #1d7f49; --good-bg: #e4f4ea;
+  --doc: #2a5bd7; --doc-bg: #e8efff; --pm: #9a5400; --pm-bg: #fff1de; --field: #6b46c1; --field-bg: #f0ebff;
+  --quote: #f6f3ee;
+  --f-display: "Sora", "Segoe UI", system-ui, sans-serif;
+  --f-body: "Inter", "Segoe UI", system-ui, sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  --shadow: 0 10px 30px -16px rgba(22,27,38,.3);
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --paper: #0f131c; --paper-2: #161b26; --card: #161b26;
+  --ink: #eef0f4; --ink-2: #b6bcc8; --ink-3: #8a91a1; --line: #262d3b;
+  --accent: #ff9a24; --accent-ink: #ffb259; --accent-soft: #2b1f10;
+  --night: #0a0d14; --night-2: #151a26;
+  --must: #f07171; --must-bg: #2c1717; --imp: #e3b341; --imp-bg: #2a2310; --good: #45b97c; --good-bg: #12271c;
+  --doc: #93b4ff; --doc-bg: #172446; --pm: #ffb259; --pm-bg: #2b1f10; --field: #c4b5fd; --field-bg: #251a45;
+  --quote: #121826; --shadow: 0 10px 30px -16px rgba(0,0,0,.6); color-scheme: dark } }
+:root[data-theme="dark"] {
+  --paper: #0f131c; --paper-2: #161b26; --card: #161b26;
+  --ink: #eef0f4; --ink-2: #b6bcc8; --ink-3: #8a91a1; --line: #262d3b;
+  --accent: #ff9a24; --accent-ink: #ffb259; --accent-soft: #2b1f10;
+  --night: #0a0d14; --night-2: #151a26;
+  --must: #f07171; --must-bg: #2c1717; --imp: #e3b341; --imp-bg: #2a2310; --good: #45b97c; --good-bg: #12271c;
+  --doc: #93b4ff; --doc-bg: #172446; --pm: #ffb259; --pm-bg: #2b1f10; --field: #c4b5fd; --field-bg: #251a45;
+  --quote: #121826; --shadow: 0 10px 30px -16px rgba(0,0,0,.6); color-scheme: dark }
+
+* { box-sizing: border-box; }
+html { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+body { margin: 0; background: var(--paper); color: var(--ink); font: 400 15.5px/1.6 var(--f-body); -webkit-font-smoothing: antialiased; }
+code, .mono { font-family: var(--f-mono); font-size: .86em; overflow-wrap: anywhere; }
+h1, h2, h3 { font-family: var(--f-display); text-wrap: balance; line-height: 1.25; margin: 0; }
+a { color: var(--accent-ink); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+#progress { position: fixed; top: 0; left: 0; height: 3px; width: 0; background: var(--accent); z-index: 20; }
+
+.band { background: var(--night); color: var(--on-night); position: relative; overflow: hidden;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 44px 36px; }
+.band::after { content: ""; position: absolute; inset: auto -10% -60% 45%; height: 90%; background: radial-gradient(closest-side, rgba(242,133,0,.25), transparent); pointer-events: none; }
+.wrap { max-width: 880px; margin: 0 auto; position: relative; z-index: 1; }
+.eyebrow { font: 600 12px/1 var(--f-display); letter-spacing: .14em; text-transform: uppercase; color: #ffb259; }
+.band h1 { font-size: clamp(1.8rem, 4.6vw, 2.6rem); font-weight: 700; margin-top: 10px; color: var(--on-night); letter-spacing: -.01em; }
+.band p { color: var(--on-night-2); max-width: 66ch; margin: 12px 0 0; }
+.meta { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-top: 22px; }
+.meta label { display: block; font-size: .72rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--on-night-2); margin-bottom: 4px; }
+.meta input { width: 100%; background: rgba(255,255,255,.06); border: 1px solid #2c3445; border-radius: 8px; color: var(--on-night); padding: 8px 10px; font: inherit; font-size: .9rem; }
+.meta input::placeholder { color: #7f889a; }
+.sources { margin-top: 18px; font-size: .84rem; color: var(--on-night-2); }
+.sources b { color: var(--on-night); font-weight: 600; }
+
+main { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 28px 64px; }
+.stack { display: flex; flex-direction: column; gap: 22px; }
+
+.panel { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 20px 22px; box-shadow: var(--shadow); }
+.panel h2 { font-size: 1.08rem; }
+.panel p { margin: 8px 0 0; max-width: 68ch; }
+.say { border-left: 3px solid var(--accent); background: var(--accent-soft); padding: 10px 14px; border-radius: 0 8px 8px 0; margin-top: 12px; font-style: italic; }
+.mustlist { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.mustlist a { text-decoration: none; background: var(--must-bg); color: var(--must); font-weight: 600; font-size: .84rem; padding: 5px 11px; border-radius: 999px; }
+.toolbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 16px; }
+.btn { font: inherit; font-weight: 600; font-size: .86rem; border-radius: 9px; padding: 8px 14px; cursor: pointer; border: 1px solid var(--accent); background: var(--accent); color: #161b26; }
+.btn.ghost { background: transparent; color: var(--accent-ink); }
+.status { font-size: .84rem; color: var(--ink-3); }
+.map { width: 100%; border-collapse: collapse; font-size: .9rem; margin-top: 10px; }
+.map th, .map td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.map th { font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); }
+
+.q { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 22px; box-shadow: var(--shadow); scroll-margin-top: 16px; }
+.qhead { display: flex; gap: 14px; align-items: flex-start; }
+.num { flex: none; width: 38px; height: 38px; border-radius: 10px; background: var(--night-2); color: #ffb259; display: grid; place-items: center; font: 700 15px var(--f-display); font-variant-numeric: tabular-nums; }
+.qhead h3 { font-size: 1.12rem; min-width: 0; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 7px; }
+.chip { font-size: .7rem; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; padding: 3px 8px; border-radius: 999px; }
+.chip.must { background: var(--must-bg); color: var(--must); } .chip.imp { background: var(--imp-bg); color: var(--imp); } .chip.good { background: var(--good-bg); color: var(--good); }
+.chip.topic { background: var(--paper-2); color: var(--ink-2); border: 1px solid var(--line); }
+.chip.asm { background: var(--accent-soft); color: var(--accent-ink); font-family: var(--f-mono); letter-spacing: 0; text-transform: none; }
+.sec { margin-top: 16px; }
+.sec h4 { margin: 0 0 6px; font-size: .72rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); }
+.sec p { margin: 0; max-width: 70ch; }
+ul.ev { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px; }
+ul.ev li { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 10px; align-items: baseline; }
+ul.ev li > span:last-child { min-width: 0; overflow-wrap: anywhere; }
+.src { font-size: .68rem; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; padding: 2px 7px; border-radius: 5px; white-space: nowrap; }
+.src.doc { background: var(--doc-bg); color: var(--doc); } .src.pm { background: var(--pm-bg); color: var(--pm); } .src.field { background: var(--field-bg); color: var(--field); }
+.ask { background: var(--quote); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; font-weight: 600; }
+.today { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 10px; align-items: baseline; background: var(--accent-soft); border-radius: 10px; padding: 10px 14px; font-size: .93rem; }
+.today b { color: var(--accent-ink); font-family: var(--f-mono); font-size: .85rem; }
+ul.good { margin: 0; padding-left: 20px; }
+textarea { width: 100%; min-height: 68px; resize: vertical; font: inherit; font-size: .92rem; color: var(--ink); background: var(--quote); border: 1px dashed var(--line); border-radius: 10px; padding: 10px 12px; }
+
+.house table { width: 100%; border-collapse: collapse; font-size: .9rem; }
+.tablewrap { overflow-x: auto; margin-top: 10px; }
+.house th, .house td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.house th { font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); }
+.confirmed { margin: 10px 0 0; padding-left: 20px; }
+footer { margin-top: 28px; font-size: .82rem; color: var(--ink-3); }
+
+#rail { position: fixed; right: max(14px, env(safe-area-inset-right, 0px)); top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 9px; z-index: 15; }
+#rail a { width: 10px; height: 10px; border-radius: 50%; background: var(--line); display: block; position: relative; }
+#rail a.on { background: var(--accent); transform: scale(1.25); }
+#rail a span { position: absolute; right: 18px; top: 50%; transform: translateY(-50%); white-space: nowrap; background: var(--night); color: #fff; font-size: .75rem; padding: 3px 8px; border-radius: 6px; opacity: 0; pointer-events: none; }
+#rail a:hover span, #rail a:focus-visible span { opacity: 1; }
+@media (max-width: 1080px) { #rail { display: none; } }
+@media (prefers-reduced-motion: no-preference) { #rail a { transition: transform .2s, background .2s; } }
+@media (max-width: 520px) { .q, .panel { padding: 16px; } .qhead { gap: 10px; } .num { width: 32px; height: 32px; } }
+</style>
+</head>
+<body>
+
+<div id="progress" aria-hidden="true"></div>
+
+<header class="band" id="top">
+  <div class="wrap">
+    <div class="eyebrow">Data Migration Ferry · Temenos Digital DataMigration APIs</div>
+    <h1>Temenos DataMigration Call Sheet</h1>
+    <p>Questions for the Temenos product team on the <code>DataMigration</code> Fabric app, most critical first. They apply to a migration from any core banking system. Each question quotes where it came from, and names the Ferry assumption its answer will confirm or change.</p>
+    <div class="meta">
+      <div><label for="m-date">Date</label><input id="m-date" placeholder="e.g. 5 Nov 2026"></div>
+      <div><label for="m-ours">Our side</label><input id="m-ours" placeholder="Names"></div>
+      <div><label for="m-theirs">Temenos product</label><input id="m-theirs" placeholder="Names"></div>
+    </div>
+    <div class="sources"><b>Sources:</b> Temenos Digital Data Migration and flows (docx; Customer Management part updated 27 Jul 2026, Migration API Guide part 9 Jan 2025) · Temenos Digital Data Migration API Collection (Postman, 20 requests) · field experience from earlier Temenos Digital migrations.</div>
+  </div>
+</header>
+
+<main>
+<div class="wrap stack">
+
+  <section class="panel" id="overview">
+    <h2>Goal of the call</h2>
+    <p>Leave knowing whether the <code>DataMigration</code> APIs can migrate customers from any core banking system, and exactly what a migration tool must send in each case. Data Migration Ferry, our source-agnostic migration tool, already works on named assumptions (A-01 to A-12) wherever the material is unclear. Each answer here confirms one of them or tells us which way to switch it.</p>
+    <div class="say">“We're building a reusable, implementation-side migration tool for Temenos Digital that takes data from any core banking system. We've read the API guide and the Postman collection end to end. These are the points where the material is unclear or contradicts itself, starting with the ones that decide whether the approach works at all.”</div>
+    <h2 style="margin-top:18px">Cannot leave the call without answers to</h2>
+    <div class="mustlist">
+      <a href="#q1">1 · Core system support</a><a href="#q2">2 · Release and legal entity</a><a href="#q3">3 · groupRule format</a><a href="#q4">4 · Bracket boundaries</a><a href="#q5">5 · Contract names</a>
+    </div>
+    <h2 style="margin-top:18px">Which answers settle which Ferry assumptions</h2>
+    <div class="tablewrap"><table class="map">
+      <thead><tr><th>Assumption</th><th>Question</th><th>Assumption</th><th>Question</th></tr></thead>
+      <tbody>
+        <tr><td><code>A-01</code> linked or virtual users</td><td><a href="#q1">1</a>, <a href="#q6">6</a></td><td><code>A-07</code> contract name clashes</td><td><a href="#q5">5</a></td></tr>
+        <tr><td><code>A-02</code> groupRule format</td><td><a href="#q3">3</a></td><td><code>A-08</code> blank mandatory fields</td><td><a href="#q6">6</a></td></tr>
+        <tr><td><code>A-03</code> bracket boundaries</td><td><a href="#q4">4</a></td><td><code>A-09</code> joint accounts</td><td><a href="#q14">14</a></td></tr>
+        <tr><td><code>A-04</code> no-approval ranges</td><td><a href="#q8">8</a></td><td><code>A-10</code> what counts as success</td><td><a href="#q15">15</a></td></tr>
+        <tr><td><code>A-05</code> “all transactions” rules</td><td><a href="#q9">9</a></td><td><code>A-11</code> safe parallelism</td><td><a href="#q13">13</a></td></tr>
+        <tr><td><code>A-06</code> non-monetary rules</td><td><a href="#q9">9</a></td><td><code>A-12</code> rollback method</td><td><a href="#q10">10</a>, <a href="#q11">11</a>, <a href="#q12">12</a></td></tr>
+      </tbody>
+    </table></div>
+    <div class="toolbar">
+      <button class="btn" id="copy">Copy questions as text</button>
+      <button class="btn ghost" id="clear">Clear my notes</button>
+      <span class="status" id="status" role="status"></span>
+    </div>
+  </section>
+
+  <!-- 1 -->
+  <article class="q" id="q1" data-label="Core system support">
+    <div class="qhead"><div class="num">1</div><div><h3>Which core banking systems do the APIs work with?</h3>
+      <div class="chips"><span class="chip must">Must answer</span><span class="chip topic">Environment</span><span class="chip asm">A-01</span></div></div></div>
+    <div class="sec"><h4>Why it matters</h4><p>Several APIs read customer and account details from the core system. If a bank's core is not supported, <code>LinkUserToContract</code> cannot be used and every user would have to go through <code>CreateVirtualUser</code>, with all its mandatory fields. That changes the data a bank has to supply.</p></div>
+    <div class="sec"><h4>Evidence</h4><ul class="ev">
+      <li><span class="src doc">Doc</span><span>CreateContract, LinkUserToContract, CreateVirtualUser, CreateApprovalMatrixRule and UpdateUserLimits all list <b>Backend APIs: “PartyMS, T24 User API”</b>.</span></li>
+      <li><span class="src doc">Doc</span><span>LinkUserToContract: “Fetches the data from Core System configuration and adds user to contract.” and “If only 'cif' is sent, user will be created in the digital database.”</span></li>
+      <li><span class="src doc">Doc</span><span>Error codes, LinkUserToContract: <code>ERR_10001</code> “Customer details are not present in T24”.</span></li>
+      <li><span class="src doc">Doc</span><span>Prerequisites: “Customers setup in T24 or Party <b>or the core system used</b>.” This is the only hint that other cores are supported.</span></li>
+    </ul></div>
+    <div class="sec"><h4>Ask</h4><div class="ask">Which core banking systems are supported besides Transact (T24) and Party, and through which integration service? Which APIs call the core at all, and which fields do they fetch?</div></div>
+    <div class="sec"><h4>A good answer includes</h4><ul class="good"><li>The supported cores and the adapter or integration service for each.</li><li>The list of APIs that call the core, and the fields each one reads (name, phone, email, date of birth, national ID).</li><li>What the APIs do when the core is slow or unavailable.</li></ul></div>
+    <div class="sec"><h4>How Ferry handles it today</h4><div class="today"><b>A-01</b><span>Per record: a user with their own customer number is linked through the core; anyone else becomes a virtual user. If the core can't be read, switch A-01 to “always virtual”.</span></div></div>
+    <div class="sec"><h4>Their answer</h4><textarea id="n1" aria-label="Notes for question 1"></textarea></div>
+  </article>
+
+  <!-- 2 -->
+  <article class="q" id="q2" data-label="Release and legal entity">
+    <div class="qhead"><div class="num">2</div><div><h3>Which release includes these APIs, and how is the legal entity chosen?</h3>
+      <div class="chips"><span class="chip must">Must answer</span><span class="chip topic">Environment</span></div></div></div>
+    <div class="sec"><h4>Why it matters</h4><p>A migration tool should use the exception log, the reconciliation report and DeleteMigratedData rather than rebuilding them. They are labelled “New”, so we need to know which releases have them. Every main API also needs <code>legalEntityId</code>.</p></div>
+    <div class="sec"><h4>Evidence</h4><ul class="ev">
+      <li><span class="src doc">Doc</span><span>“Starting 202510, the following Fabric runtime configurations have been introduced”: <code>SKIP_MIGRATION_NOTIFICATIONS</code> (default true) and <code>DATAMIGRATION_EMAIL_OPTIONAL</code> (default false).</span></li>
+      <li><span class="src doc">Doc</span><span>GetMigrationReconReport, GetMigrationExceptions and DeleteMigrationExceptions are marked “New / Modified: New”, with examples dated April 2026. Exceptions go to a new <code>migration_exception_log</code> table in the <code>dbxlogs</code> database.</span></li>
+      <li><span class="src doc">Doc</span><span>The document joins two parts with different dates: the Customer Management part (27 Jul 2026) and the Migration API Guide (9 Jan 2025).</span></li>
+      <li><span class="src pm">Postman</span><span><code>legalEntityId</code> is sent on CreateContract, LinkUserToContract, CreateVirtualUser, limits and payees. All samples use <code>GB0010001</code>. Doc error <code>ERR_22232</code>: “LegalEntityId cannot be null”.</span></li>
+    </ul></div>
+    <div class="sec"><h4>Ask</h4><div class="ask">From which Temenos Digital release are the DataMigration app, the three new APIs and both runtime settings available? How does a bank find its legal entity ID, and can one migration cover several legal entities?</div></div>
+    <div class="sec"><h4>A good answer includes</h4><ul class="good"><li>The first release with each piece, and any patch required.</li><li>Where the legal entity ID is configured, and how multi-entity banks should send it.</li><li>Who sets the two Fabric properties, and whether the <code>dbxlogs</code> database is always present.</li></ul></div>
+    <div class="sec"><h4>How Ferry handles it today</h4><div class="today"><b>Config</b><span>Legal entity comes from the row, or from the environment's default in <code>environments.json</code>. A record with neither is blocked (check <code>XR_LEGAL_ENTITY</code>).</span></div></div>
+    <div class="sec"><h4>Their answer</h4><textarea id="n2" aria-label="Notes for question 2"></textarea></div>
+  </article>
+
+  <!-- 3 -->
+  <article class="q" id="q3" data-label="groupRule format">
+    <div class="qhead"><div class="num">3</div><div><h3>How does <code>groupRule</code> say “any 2 approvals from the same group”?</h3>
+      <div class="chips"><span class="chip must">Must answer</span><span class="chip topic">Approval rules</span><span class="chip asm">A-02</span></div></div></div>
+    <div class="sec"><h4>Why it matters</h4><p>Business customers often need “any 2 of the approvers in group A”. If the format is misread, a rule like that becomes “all of A, B and C”, and payments that should go through get stuck. We need the confirmed format before converting any group-based rule.</p></div>
+    <div class="sec"><h4>Evidence</h4><ul class="ev">
+      <li><span class="src doc">Doc</span><span>CreateApprovalMatrixRule reference: <code>groupList</code> holds <b>2</b> group IDs and <code>groupRule</code> is <code>"[[0],[2]]"</code>.</span></li>
+      <li><span class="src doc">Doc</span><span>SME use case, Step 7: <code>groupList</code> holds <b>4</b> group IDs and <code>groupRule</code> is <code>"[[0,1,0,0],[1,0,0,0]]"</code>, one 1/0 flag per group.</span></li>
+      <li><span class="src doc">Doc</span><span>Parameter table: “Each list with in ‘groupRule’ is AND condition and between the list is OR condition” and “Each ‘groupRule’ list count should not exceed the total count of ‘groupList’ list.”</span></li>
+      <li><span class="src field">Field</span><span>In an existing Temenos Digital installation, <code>signatorygroupmatrix</code> rows store <code>groupRule '[[1]]'</code>, the 1/0 style.</span></li>
+    </ul></div>
+    <div class="sec"><h4>Ask</h4><div class="ask">Which example is correct? Is each number in a row a 1/0 flag, or the number of approvals needed from that group? How do we send “2 approvals from group A” and “1 from A and 2 from B”?</div></div>
+    <div class="sec"><h4>A good answer includes</h4><ul class="good"><li>A corrected sample payload for each of those two cases.</li><li>Whether a count above 1 is supported at all.</li><li>What happens when the count is larger than the group's member count.</li></ul></div>
+    <div class="sec"><h4>How Ferry handles it today</h4><div class="today"><b>A-02</b><span>1/0 flag per group. Rules that need more than one approval from the same group are parked for review. Switch to “count per group” if Temenos confirms counts.</span></div></div>
+    <div class="sec"><h4>Their answer</h4><textarea id="n3" aria-label="Notes for question 3"></textarea></div>
+  </article>
+
+  <!-- 4 -->
+  <article class="q" id="q4" data-label="Bracket boundaries">
+    <div class="qhead"><div class="num">4</div><div><h3>Do neighbouring amount brackets share a boundary?</h3>
+      <div class="chips"><span class="chip must">Must answer</span><span class="chip topic">Approval rules</span><span class="chip asm">A-03</span></div></div></div>
+    <div class="sec"><h4>Why it matters</h4><p>Every converted approval rule is split into amount brackets. Legacy systems usually write them as 0–1,000 then 1,001–3,000. If the API treats the lower limit as exclusive, an amount such as 1,000.50 falls under no rule at all.</p></div>
+    <div class="sec"><h4>Evidence</h4><ul class="ev">
+      <li><span class="src doc">Doc</span><span>CreateApprovalMatrixRule: brackets <code>"-1.00"</code>→<code>"5"</code>, then <code>"5"</code>→<code>"-1.00"</code>. The boundary value is reused.</span></li>
+      <li><span class="src pm">Postman</span><span>CreateApprovalMatrixRule: <code>"-1.00"</code>→<code>"10"</code>, then <code>"10"</code>→<code>"-1.00"</code>.</span></li>
+      <li><span class="src doc">Doc</span><span>Error <code>ERR_87114</code> “Approval Rule Initialization Failed - invalid values for limit ranges!”</span></li>
+      <li><span class="src field">Field</span><span>Approval rules exported from legacy systems commonly use the previous upper limit + 1 as the next lower limit.</span></li>
+    </ul></div>
+    <div class="sec"><h4>Ask</h4><div class="ask">Is <code>lowerlimit</code> exclusive and <code>upperlimit</code> inclusive? Must brackets meet exactly (5 then 5)? Does a gap of 1 raise <code>ERR_87114</code> or leave amounts uncovered? How are decimals handled?</div></div>
+    <div class="sec"><h4>A good answer includes</h4><ul class="good"><li>The exact rule, shown with the amounts 1,000, 1,000.50 and 1,001.</li><li>Confirmation that <code>-1.00</code> means “open” at either end.</li></ul></div>
+    <div class="sec"><h4>How Ferry handles it today</h4><div class="today"><b>A-03</b><span>Neighbouring brackets share the boundary value, as in the vendor examples. Switch to “previous upper + 1” if Temenos says otherwise.</span></div></div>
+    <div class="sec"><h4>Their answer</h4><textarea id="n4" aria-label="Notes for question 4"></textarea></div>
+  </article>
+
+  <!-- 5 -->
+  <article class="q" id="q5" data-label="Contract names">
+    <div class="qhead"><div class="num">5</div><div><h3>What makes two contracts clash on name, and are retries safe?</h3>
+      <div class="chips"><span class="chip must">Must answer</span><span class="chip topic">Contracts</span><span class="chip asm">A-07</span></div></div></div>
+    <div class="sec"><h4>Why it matters</h4><p>CreateContract takes no name, yet it can fail with “contract already existing with given name”. Customers often share the same full name. If the contract name comes from the customer's name, many valid contracts would be rejected. It also decides whether a timed-out call can be retried safely.</p></div>
+    <div class="sec"><h4>Evidence</h4><ul class="ev">
+      <li><span class="src pm">Postman</span><span>CreateContract saved response: <code>dbpErrCode 21967</code>, FailureReason “[ErrorCode=10401, Message=A contract is already existing with given name, please choose another]”, with <code>opstatus 0</code>.</span></li>
+      <li><span class="src doc">Doc</span><span>The CreateContract request has no name field. <code>ERR_10401</code> appears again under UpdateContractLimits: “Contract exists with given name”.</span></li>
+      <li><span class="src field">Field</span><span>The same <code>21967</code> error was returned on real contract creation in an earlier Temenos Digital migration.</span></li>
+    </ul></div>
+    <div class="sec"><h4>Ask</h4><div class="ask">How is the contract name built, must it be unique, and can we pass our own? If a call times out, how do we find out whether the contract was created before we retry?</div></div>
+    <div class="sec"><h4>A good answer includes</h4><ul class="good"><li>The naming rule and the scope of uniqueness.</li><li>A lookup by customer number, or an idempotent retry path.</li></ul></div>
+    <div class="sec"><h4>How Ferry handles it today</h4><div class="today"><b>A-07</b><span>A name clash is reported as its own outcome and never retried automatically. The ID register stops a rerun from creating a contract twice.</span></div></div>
+    <div class="sec"><h4>Their answer</h4><textarea id="n5" aria-label="Notes for question 5"></textarea></div>
+  </article>
+
+  <!-- 6 -->
+  <article class="q" id="q6" data-label="Users">
+    <div class="qhead"><div class="num">6</div><div><h3>Which users go through LinkUserToContract and which through CreateVirtualUser? Which fields may be blank?</h3>
+      <div class="chips"><span class="chip imp">Important</span><span class="chip topic">Users</span><span class="chip asm">A-01</span><span class="chip asm">A-08</span></div></div></div>
+    <div class="sec"><h4>Why it matters</h4><p>Business users such as a company's accountant often have no customer number of their own. CreateVirtualUser marks every personal field as mandatory, and source data commonly has gaps in email, middle name and tax ID.</p></div>
+    <div class="sec"><h4>Evidence</h4><ul class="ev">
+      <li><span class="src doc">Doc</span><span>CreateVirtualUser: email, phone, phoneCountryCode, firstName, lastName, dob, taxId and middleName are all “Mandatory”. Errors include <code>ERR_10050</code> “Invalid middle name” and “Invalid ssn”.</span></li>
+      <li><span class="src doc">Doc</span><span><code>DATAMIGRATION_EMAIL_OPTIONAL</code> (default false) covers email only.</span></li>
+      <li><span class="src doc">Doc</span><span>SME use case: a virtual user is for a “business user who is not a customer of the bank”.</span></li>
+      <li><span class="src field">Field</span><span>Legacy user exports often carry only the company's primary customer number, not one per user, and leave middle name empty.</span></li>
+    </ul></div>
+    <div class="sec"><h4>Ask</h4><div class="ask">For a business user with no customer number of their own, is CreateVirtualUser the route? Can middleName and taxId be empty? Should a national ID number go in taxId? What formats do phone and dob follow?</div></div>
+    <div class="sec"><h4>A good answer includes</h4><ul class="good"><li>A decision rule for each user type.</li><li>The true minimum set of mandatory fields.</li><li>Field formats and validation rules.</li></ul></div>
+    <div class="sec"><h4>How Ferry handles it today</h4><div class="today"><b>A-08</b><span>Users are linked or virtual per record (A-01). A virtual user missing any field the vendor marks mandatory is blocked until it is filled. Switch A-08 to “send blank” if Temenos relaxes the rule.</span></div></div>
+    <div class="sec"><h4>Their answer</h4><textarea id="n6" aria-label="Notes for question 6"></textarea></div>
+  </article>
+
+  <!-- 7 -->
+  <article class="q" id="q7" data-label="Login and passwords">
+    <div class="qhead"><div class="num">7</div><div><h3>How do migrated users keep their login name and password?</h3>
+      <div class="chips"><span class="chip imp">Important</span><span class="chip topic">Users</span></div></div></div>
+    <div class="sec"><h4>Why it matters</h4><p>Customers expect to log in with their existing details after migration. The APIs accept a legacy user name but don't mention passwords at all.</p></div>
+    <div class="sec"><h4>Evidence</h4><ul class="ev">
+      <li><span class="src doc">Doc</span><span>LinkUserToContract and CreateVirtualUser: <code>legacyUserName</code> “specifies the userName to be taken for the customer”.</span></li>
+      <li><span class="src doc">Doc</span><span>“The Implementation team needs to implement onboarding / adding the user into the third-party authentication systems like HID or Uniken separately. This will not be part of the Migration APIs.”</span></li>
+      <li><span class="src field">Field</span><span>A common approach keeps the old password: at first login the password is checked against the legacy system, then stored in the new platform.</span></li>
+    </ul></div>
+    <div class="sec"><h4>Ask</h4><div class="ask">If <code>legacyUserName</code> is the old login name, what does the user type at first login? Is a first-login check against the legacy system supported for users created by these APIs? Are user names checked for format and uniqueness?</div></div>
+    <div class="sec"><h4>A good answer includes</h4><ul class="good"><li>The end-to-end first-login sequence for a migrated user.</li><li>User-name rules and what happens on a duplicate.</li></ul></div>
+    <div class="sec"><h4>How Ferry handles it today</h4><div class="today"><b>Config</b><span>Sends <code>legacyUserName</code> from the source's “Legacy User Name” column and warns on characters the target may refuse. Passwords are outside Ferry.</span></div></div>
+    <div class="sec"><h4>Their answer</h4><textarea id="n7" aria-label="Notes for question 7"></textarea></div>
+  </article>
+
+  <!-- 8 -->
+  <article class="q" id="q8" data-label="No-approval ranges">
+    <div class="qhead"><div class="num">8</div><div><h3>How do we send amount ranges that need no approval?</h3>
+      <div class="chips"><span class="chip imp">Important</span><span class="chip topic">Approval rules</span><span class="chip asm">A-04</span></div></div></div>
+    <div class="sec"><h4>Why it matters</h4><p>Many approval rules only start above a threshold, so the range below it needs no approval. Postman shows a form for this that the document never mentions, and its saved response is an error.</p></div>
+    <div class="sec"><h4>Evidence</h4><ul class="ev">
+      <li><span class="src pm">Postman</span><span>CreateApprovalMatrixRule body: <code>"isGroupMatrix": "0"</code>, and the first bracket <code>"-1.00"</code>→<code>"10"</code> has <code>"approvalruleId": "NO_APPROVAL"</code>, <code>"approvers": []</code>, <code>"numberOfApprovals": 0</code>.</span></li>
+      <li><span class="src pm">Postman</span><span>Saved response: <code>dbpErrCode 10205</code>, FailureReason “[ErrorCode=87115, Message=Given Limit values are not applicable for the Approval mode!]”.</span></li>
+      <li><span class="src doc">Doc</span><span>No <code>approvalruleId</code>, <code>isGroupMatrix</code> or <code>NO_APPROVAL</code> in any parameter table. <code>numberOfApprovals</code> “cannot exceed the list of ‘approvers’”.</span></li>
+    </ul></div>
+    <div class="sec"><h4>Ask</h4><div class="ask">Is <code>NO_APPROVAL</code> the supported way to express a range with no approval? What do <code>isGroupMatrix</code> and <code>approvalruleId</code> do, and what caused <code>87115</code> here? Or should those ranges simply be left out?</div></div>
+    <div class="sec"><h4>A good answer includes</h4><ul class="good"><li>A working sample for “0–1,000 no approval; above 1,000 any 1 of A, B”, in both user and group mode.</li></ul></div>
+    <div class="sec"><h4>How Ferry handles it today</h4><div class="today"><b>A-04</b><span>Ranges that need no approval are not sent. Switch to “send as NO_APPROVAL” if Temenos confirms that form.</span></div></div>
+    <div class="sec"><h4>Their answer</h4><textarea id="n8" aria-label="Notes for question 8"></textarea></div>
+  </article>
+
+  <!-- 9 -->
+  <article class="q" id="q9" data-label="Rule expansion">
+    <div class="qhead"><div class="num">9</div><div><h3>How many CreateApprovalMatrixRule calls does one legacy rule become?</h3>
+      <div class="chips"><span class="chip imp">Important</span><span class="chip topic">Approval rules</span><span class="chip asm">A-05</span><span class="chip asm">A-06</span></div></div></div>
+    <div class="sec"><h4>Why it matters</h4><p>Legacy approval rules often apply to all transaction types at once, and some apply to requests that move no money, such as statement requests. The API takes one action and one limit type per call, so this decides the call volume and the payload for those requests.</p></div>
+    <div class="sec"><h4>Evidence</h4><ul class="ev">
+      <li><span class="src doc">Doc</span><span><code>actionId</code> Mandatory, “configured in Digital system for a feature”. <code>limitTypeId</code> Mandatory. <code>ERR_10205</code> “Missing limitTypeId in request”. Every sample uses <code>MAX_TRANSACTION_LIMIT</code>.</span></li>
+      <li><span class="src pm">Postman</span><span>GetMigrationReconReport description, SME service definition: “approvalActionsPerCif = 78”.</span></li>
+      <li><span class="src field">Field</span><span>Legacy rule exports commonly use a wildcard (<code>*</code>) for all transaction types, and list non-monetary request codes with amounts of 0–0.</span></li>
+    </ul></div>
+    <div class="sec"><h4>Ask</h4><div class="ask">For an “all transactions” rule, do we call once per approval-enabled action (78?) and once per limit type (transaction, daily, weekly)? For actions that move no money, which limitTypeId and limits do we send?</div></div>
+    <div class="sec"><h4>A good answer includes</h4><ul class="good"><li>How to get the approval-enabled action list for a bank's service definitions.</li><li>The limit types required.</li><li>A sample for an action that moves no money.</li></ul></div>
+    <div class="sec"><h4>How Ferry handles it today</h4><div class="today"><b>A-05/06</b><span>An “all transactions” rule becomes one call per action in the list configured for the contract's service definition (A-05). Rules for actions that move no money are parked for review (A-06).</span></div></div>
+    <div class="sec"><h4>Their answer</h4><textarea id="n9" aria-label="Notes for question 9"></textarea></div>
+  </article>
+
+  <!-- 10 -->
+  <article class="q" id="q10" data-label="What it deletes">
+    <div class="qhead"><div class="num">10</div><div><h3>What does DeleteMigratedData remove for each migration API?</h3>
+      <div class="chips"><span class="chip imp">Important</span><span class="chip topic">Un-enrollment</span><span class="chip asm">A-12</span></div></div></div>
+    <div class="sec"><h4>Why it matters</h4><p>Re-running a customer cleanly needs everything the migration created to be removed first. Deleting at database level is error-prone: tables such as <code>backendidentifier</code> and <code>customeraction</code> stop a customer from being deleted. We would rather use the product API, but the material documents only one case.</p></div>
+    <div class="sec"><h4>Evidence</h4><ul class="ev">
+      <li><span class="src doc">Doc</span><span>DeleteMigratedData takes <code>apis</code>, <code>contractId</code>, <code>customerId</code> and <code>cif</code>. The only sample sends <code>"apis": ["CreateVirtualUser"]</code> with a contractId and customerId and an empty <code>cif</code>.</span></li>
+      <li><span class="src doc">Doc</span><span>The sample response lists 12 customer tables and 369 rows: <code>customer</code>, <code>customerlegalentity</code>, <code>customerpreference</code>, <code>customercommunication</code>, <code>customeraccounts</code>, <code>excludedcustomeraccounts</code>, <code>backendidentifier</code>, <code>customergroup</code>, <code>contractcustomers</code>, <code>customeraction</code> (357 rows), <code>customerlimitgrouplimits</code> and <code>customeraddress</code>.</span></li>
+      <li><span class="src doc">Doc</span><span>No table list or sample for CreateContract, LinkUserToContract, CreateSignatoryGroup, UpdateApprovalMatrixMode, CreateApprovalMatrixRule, limits or payees. Contract-level tables such as <code>contract</code> and <code>contractcorecustomers</code> never appear.</span></li>
+      <li><span class="src pm">Postman</span><span>The same single CreateVirtualUser sample, described as “Destructive — use with caution. Specify apis to limit deletion scope”.</span></li>
+      <li><span class="src field">Field</span><span>A database-level un-enrollment built for an earlier migration needed 93 delete steps to remove a full contract. Real data also contains contracts shared by several customer numbers.</span></li>
+    </ul></div>
+    <div class="sec"><h4>Ask</h4><div class="ask">Which values does <code>apis</code> accept, and which tables does each one delete? Can one call remove a whole business contract with its users, signatory groups, approval rules, limits and payees, and in what order should <code>apis</code> be listed? Which of <code>contractId</code>, <code>customerId</code> and <code>cif</code> are required for each API? How does it handle a contract shared by several customers, or a user on several contracts?</div></div>
+    <div class="sec"><h4>A good answer includes</h4><ul class="good"><li>The table list per API.</li><li>A sample request and response that removes a full business contract.</li><li>The identifier rules, and the behaviour on shared contracts and shared users.</li></ul></div>
+    <div class="sec"><h4>How Ferry handles it today</h4><div class="today"><b>A-12</b><span>Return Crossing (build step 7) will call DeleteMigratedData, limited to IDs in Ferry's ID register. What it can promise depends on this answer.</span></div></div>
+    <div class="sec"><h4>Their answer</h4><textarea id="n10" aria-label="Notes for question 10"></textarea></div>
+  </article>
+
+  <!-- 11 -->
+  <article class="q" id="q11" data-label="Un-enrollment scope">
+    <div class="qhead"><div class="num">11</div><div><h3>Is DeleteMigratedData only for failed migrations, or a full un-enrollment?</h3>
+      <div class="chips"><span class="chip imp">Important</span><span class="chip topic">Un-enrollment</span><span class="chip asm">A-12</span></div></div></div>
+    <div class="sec"><h4>Why it matters</h4><p>Projects need to un-enroll customers who migrated successfully: to repeat test runs, and to back out a customer after cut-over if something is wrong. Many banks also hold customers enrolled earlier by bulk loads or other channels, which never went through these APIs. If the API only cleans up failures, each project needs its own un-enrollment for every other case.</p></div>
+    <div class="sec"><h4>Evidence</h4><ul class="ev">
+      <li><span class="src doc">Doc</span><span>Description: “This API deletes migrated <b>error</b> data from the database.” Functionality: “Deletes the migrated error data from the database.”</span></li>
+      <li><span class="src doc">Doc</span><span>“Failed records can be remediated by using the <b>existing rollback API</b> and re-running the migration APIs for the affected records.” The rollback API is not named anywhere else.</span></li>
+      <li><span class="src field">Field</span><span>In a database-level un-enrollment of a real customer, one <code>interbankfundtransfers</code> row created after enrolment blocked deleting the customer through its foreign key.</span></li>
+      <li><span class="src field">Field</span><span>Earlier migrations often loaded customers by bulk insert or stored procedures, outside these APIs.</span></li>
+    </ul></div>
+    <div class="sec"><h4>Ask</h4><div class="ask">Can DeleteMigratedData remove a customer whose migration succeeded? Does it work for customers created outside these APIs (bulk loads, Spotlight or branch onboarding)? If the customer has logged in and created payments, alerts or messages since migration, are those deleted, kept, or does the call fail? Is “the existing rollback API” this API or a different one?</div></div>
+    <div class="sec"><h4>A good answer includes</h4><ul class="good"><li>A clear statement of which customers it may be used on.</li><li>Its behaviour when the customer has activity after migration.</li><li>The name and documentation of the rollback API, if it is a different one.</li></ul></div>
+    <div class="sec"><h4>How Ferry handles it today</h4><div class="today"><b>A-12</b><span>By design, Return Crossing only removes what Ferry itself created. Customers created any other way are out of its scope.</span></div></div>
+    <div class="sec"><h4>Their answer</h4><textarea id="n15" aria-label="Notes for question 11"></textarea></div>
+  </article>
+
+  <!-- 12 -->
+  <article class="q" id="q12" data-label="Delete safety">
+    <div class="qhead"><div class="num">12</div><div><h3>Is a delete all-or-nothing, can we preview it, and is it logged?</h3>
+      <div class="chips"><span class="chip imp">Important</span><span class="chip topic">Un-enrollment</span><span class="chip asm">A-12</span></div></div></div>
+    <div class="sec"><h4>Why it matters</h4><p>A delete that stops half-way leaves a customer that can neither log in nor be migrated again. A safe un-enrollment runs as one transaction, shows row counts before anything is deleted, and records who ran it. We need to know what the product API offers before relying on it.</p></div>
+    <div class="sec"><h4>Evidence</h4><ul class="ev">
+      <li><span class="src doc">Doc</span><span>The response reports a <code>status</code> per table, plus <code>summary: "PASS"</code> and <code>totalDeleted</code>. Nothing says whether the tables are deleted in one transaction, or what a failed table does to the others.</span></li>
+      <li><span class="src doc">Doc</span><span>There is no preview or dry-run parameter, and no sample of a failed or partial response.</span></li>
+      <li><span class="src doc">Doc</span><span>Its error list is copied from the reconciliation API: <code>ERR_10351</code> “Failed to generate reconciliation report / stored procedure error”.</span></li>
+    </ul></div>
+    <div class="sec"><h4>Ask</h4><div class="ask">If deleting one table fails, are the earlier deletes rolled back? What do <code>summary</code> values other than PASS look like? Is there a way to get the row counts before deleting? Is each call logged with who ran it and what it removed? Is it allowed in production, and who may call it?</div></div>
+    <div class="sec"><h4>A good answer includes</h4><ul class="good"><li>The transaction behaviour, with a sample failure response.</li><li>A preview option, or confirmation that none exists.</li><li>Its audit trail and the production policy.</li></ul></div>
+    <div class="sec"><h4>How Ferry handles it today</h4><div class="today"><b>Design</b><span>Return Crossing will preview from the ID register before calling the API, and record every run in Ferry's audit trail.</span></div></div>
+    <div class="sec"><h4>Their answer</h4><textarea id="n16" aria-label="Notes for question 12"></textarea></div>
+  </article>
+
+  <!-- 13 -->
+  <article class="q" id="q13" data-label="Throughput">
+    <div class="qhead"><div class="num">13</div><div><h3>How fast can we safely run?</h3>
+      <div class="chips"><span class="chip imp">Important</span><span class="chip topic">Operations</span><span class="chip asm">A-11</span></div></div></div>
+    <div class="sec"><h4>Why it matters</h4><p>The APIs take one record per call. At one second per call and at least two calls per customer, 100,000 customers need about 2.3 days on a single thread. Running in parallel is essential, but only at a level the platform can take.</p></div>
+    <div class="sec"><h4>Evidence</h4><ul class="ev">
+      <li><span class="src doc">Doc</span><span>“These API will take single record at a time”.</span></li>
+      <li><span class="src doc">Doc</span><span>The sample login token was issued at 1727172416 and expires at 1727173616: a 20-minute lifetime. Postman stores it once in <code>X-Kony-Authorization</code>, but the login response also returns a <code>refresh_token</code>.</span></li>
+      <li><span class="src field">Field</span><span>Questions on safe concurrency for contract creation have gone unanswered in earlier migrations.</span></li>
+    </ul></div>
+    <div class="sec"><h4>Ask</h4><div class="ask">How many parallel calls are safe, and what response time should we expect? What is the default token lifetime, and should we use the refresh token? Are there rate limits on the DataMigration app?</div></div>
+    <div class="sec"><h4>A good answer includes</h4><ul class="good"><li>A concurrency figure backed by a test.</li><li>The recommended way to keep the token valid.</li></ul></div>
+    <div class="sec"><h4>How Ferry handles it today</h4><div class="today"><b>A-11</b><span>4 contracts at a time, steps inside a contract in order. Token refresh before expiry is part of Crossing (build step 3).</span></div></div>
+    <div class="sec"><h4>Their answer</h4><textarea id="n11" aria-label="Notes for question 13"></textarea></div>
+  </article>
+
+  <!-- 14 -->
+  <article class="q" id="q14" data-label="Joint accounts">
+    <div class="qhead"><div class="num">14</div><div><h3>Can a joint account belong to two contracts?</h3>
+      <div class="chips"><span class="chip good">Good to cover</span><span class="chip topic">Contracts</span><span class="chip asm">A-09</span></div></div></div>
+    <div class="sec"><h4>Evidence</h4><ul class="ev">
+      <li><span class="src doc">Doc</span><span>CreateContract <code>cifList</code>: each customer number carries its accounts. “At least one core customer id with one account is mandatory.”</span></li>
+      <li><span class="src field">Field</span><span>Earlier migrations could not put one account into two contracts at creation, so joint accounts were left out and synced at first login.</span></li>
+    </ul></div>
+    <div class="sec"><h4>Ask</h4><div class="ask">Can one account sit in two contracts with these APIs? If not, how should joint accounts be handled, including a customer whose only account is a joint one?</div></div>
+    <div class="sec"><h4>How Ferry handles it today</h4><div class="today"><b>A-09</b><span>An account listed under more than one contract is left out of all of them and listed for follow-up. Switch to “include” if Temenos allows it.</span></div></div>
+    <div class="sec"><h4>Their answer</h4><textarea id="n12" aria-label="Notes for question 14"></textarea></div>
+  </article>
+
+  <!-- 15 -->
+  <article class="q" id="q15" data-label="Success and errors">
+    <div class="qhead"><div class="num">15</div><div><h3>What exactly counts as success, and where is the full error list?</h3>
+      <div class="chips"><span class="chip good">Good to cover</span><span class="chip topic">Operations</span><span class="chip asm">A-10</span></div></div></div>
+    <div class="sec"><h4>Evidence</h4><ul class="ev">
+      <li><span class="src pm">Postman</span><span>Saved failures return <code>opstatus 0</code> with <code>dbpErrCode</code> and <code>dbpErrMsg</code>: 21967, 10205, 10348, 12062 and 21108.</span></li>
+      <li><span class="src doc">Doc</span><span>Every response table says “opstatus: '0' means success.”</span></li>
+      <li><span class="src doc">Doc</span><span>Each API's error list differs from the error-code section. CreateContract lists <code>ERR_10348</code>, <code>ERR_10349</code> and <code>ERR_10368</code> in one place, and <code>ERR_22232</code> and <code>ERR_21967</code> in the other. <code>ERR_22232</code> is used for three different messages.</span></li>
+    </ul></div>
+    <div class="sec"><h4>Ask</h4><div class="ask">Can we treat success as <code>opstatus 0</code> with no <code>dbpErrCode</code>? Is the HTTP status always 200? Can we have one complete error catalogue per API, and is the inner code in <code>FailureReason</code> reliable?</div></div>
+    <div class="sec"><h4>How Ferry handles it today</h4><div class="today"><b>A-10</b><span>Success only when <code>opstatus</code> is 0 and there is no <code>dbpErrCode</code>, <code>dbpErrMsg</code> or <code>errmsg</code>. The fields are set in <code>target-temenos.json</code>.</span></div></div>
+    <div class="sec"><h4>Their answer</h4><textarea id="n13" aria-label="Notes for question 15"></textarea></div>
+  </article>
+
+  <!-- 16 -->
+  <article class="q" id="q16" data-label="Inputs and counts">
+    <div class="qhead"><div class="num">16</div><div><h3>Reconciliation counts, exception filters, and the scope of limits and payees</h3>
+      <div class="chips"><span class="chip good">Good to cover</span><span class="chip topic">Operations</span></div></div></div>
+    <div class="sec"><h4>Evidence</h4><ul class="ev">
+      <li><span class="src pm">Postman</span><span>GetMigrationReconReport, SME service definition, per customer: featureCount 84, contractActionLimitCount 389, accountLevelActionLimitCount 193, approvalActionsPerCif 78. The body also sends <code>approvalMatrixCount</code> and <code>signatoryGroupMatrixCount</code>, which are not in the document.</span></li>
+      <li><span class="src pm">Postman</span><span>GetMigrationExceptions can filter by “apis, contractId, customerId, cif”. The document shows only <code>pageId</code> and <code>pageSize</code>.</span></li>
+      <li><span class="src field">Field</span><span>Source extracts often carry no limit or payee data, even though both have migration APIs.</span></li>
+    </ul></div>
+    <div class="sec"><h4>Ask</h4><div class="ask">How do we get the per-customer reference counts for a bank's own service definitions? What is the full filter list for the exception APIs? When are limits and payees expected to be migrated, and from which source?</div></div>
+    <div class="sec"><h4>How Ferry handles it today</h4><div class="today"><b>Design</b><span>The Manifest (build step 4) will combine Ferry's per-step results with the reconciliation report and exception log. Limits and payees are build step 6.</span></div></div>
+    <div class="sec"><h4>Their answer</h4><textarea id="n14" aria-label="Notes for question 16"></textarea></div>
+  </article>
+
+  <section class="panel house" id="housekeeping" data-label="Corrections">
+    <h2>Send in writing: corrections to the material</h2>
+    <p>No need to discuss these on the call. Ask for an updated document and collection.</p>
+    <div class="tablewrap"><table>
+      <thead><tr><th>Where</th><th>What's wrong</th></tr></thead>
+      <tbody>
+        <tr><td>Doc · Migration API Guide</td><td>The “Flow Diagram” heading has no diagram; the docx contains no images.</td></tr>
+        <tr><td>Doc · DeleteMigratedData</td><td>The section has no heading of its own.</td></tr>
+        <tr><td>Doc · CreateBillPayPayee</td><td>The parameter table is copied from CreatePayee (IBAN, swiftCode, payeeType). The real payload uses street, cityName, payeeNickName, companyName and nameOnBill.</td></tr>
+        <tr><td>Doc · Scope and SME steps</td><td>“UpdateApprovalMatrix” (editing an existing rule) is listed but never defined.</td></tr>
+        <tr><td>Doc · CreateP2PPayee</td><td>The parameter table lists <code>email</code> twice.</td></tr>
+        <tr><td>Doc · Exception and delete APIs</td><td>GetMigrationExceptions, DeleteMigrationExceptions and DeleteMigratedData list the error “Failed to generate reconciliation report”, copied from the reconciliation API.</td></tr>
+        <tr><td>Doc vs Postman</td><td>UpdateApprovalMatrixMode returns “Updated Successfully” in the document and “Created Successfully” in Postman.</td></tr>
+        <tr><td>Postman · variables</td><td>The last three requests use <code>{{DBX_BASE_URL}}</code>, which is not defined. <code>DBP_CORE_APP_KEY</code> and <code>DBP_CORE_SECRET</code> are defined but never used.</td></tr>
+        <tr><td>Postman · requests</td><td>“Update Limits- Contract Copy” duplicates another request. The description “Run this only to create contract and not user profile” is copied onto unrelated requests.</td></tr>
+        <tr><td>Postman · credentials</td><td>The collection ships an app key and secret for a Temenos cloud environment. Confirm they are demo values, and rotate them if not.</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section class="panel" id="confirmed" data-label="Already confirmed">
+    <h2>Already confirmed by the material, so no need to ask</h2>
+    <ul class="confirmed">
+      <li>User-based rules send <code>approvers</code> plus <code>numberOfApprovals</code>, and <code>-1</code> means all approvers.</li>
+      <li><code>"-1.00"</code> marks an open end of an amount bracket.</li>
+      <li><code>groupList</code> and <code>groupRule</code> are sent as strings, not JSON arrays.</li>
+      <li>A user can be in only one signatory group (<code>ERR_21021</code>), and signatories must already be users on the contract (<code>ERR_21018</code>).</li>
+      <li>Customers get no email or SMS during migration by default (<code>SKIP_MIGRATION_NOTIFICATIONS = true</code>).</li>
+      <li>Failures come back inside the response body, not as HTTP errors.</li>
+    </ul>
+  </section>
+
+  <footer>Data Migration Ferry · prepared 29 Oct 2026 from the Temenos DataMigration document and Postman collection, with field experience from earlier Temenos Digital migrations. Neutral version: it applies to a migration from any core banking system. Notes typed on this page stay in your own browser only.</footer>
+</div>
+</main>
+
+<nav id="rail" aria-label="Jump to question"></nav>
+
+<script>
+(function(){
+  var store = {
+    get: function(k){ try { return localStorage.getItem(k); } catch(e){ return null; } },
+    set: function(k,v){ try { localStorage.setItem(k,v); } catch(e){} },
+    del: function(k){ try { localStorage.removeItem(k); } catch(e){} }
+  };
+  var fields = Array.prototype.slice.call(document.querySelectorAll('textarea, .meta input'));
+  fields.forEach(function(el){
+    var key = 'ferrycallsheet:' + el.id, v = store.get(key);
+    if (v !== null) el.value = v;
+    el.addEventListener('input', function(){ store.set(key, el.value); });
+  });
+
+  var status = document.getElementById('status');
+  function say(t){ status.textContent = t; setTimeout(function(){ if (status.textContent === t) status.textContent = ''; }, 3500); }
+
+  document.getElementById('clear').addEventListener('click', function(){
+    fields.forEach(function(el){ el.value = ''; store.del('ferrycallsheet:' + el.id); });
+    say('Notes cleared.');
+  });
+
+  function asText(){
+    var out = ['Temenos DataMigration Call Sheet: questions for the Temenos product team', ''];
+    document.querySelectorAll('article.q').forEach(function(q){
+      var n = q.querySelector('.num').textContent.trim();
+      var t = q.querySelector('h3').textContent.trim();
+      var p = q.querySelector('.chip').textContent.trim();
+      var ask = q.querySelector('.ask').textContent.trim();
+      out.push(n + '. ' + t + ' [' + p + ']');
+      out.push('   ' + ask);
+      var notes = q.querySelector('textarea').value.trim();
+      if (notes) out.push('   Answer: ' + notes);
+      out.push('');
+    });
+    return out.join('\n');
+  }
+  document.getElementById('copy').addEventListener('click', function(){
+    var text = asText();
+    var fallback = function(){
+      var ta = document.createElement('textarea');
+      ta.value = text; ta.setAttribute('readonly',''); ta.style.position='fixed'; ta.style.opacity='0';
+      document.body.appendChild(ta); ta.select();
+      var ok = false; try { ok = document.execCommand('copy'); } catch(e){}
+      document.body.removeChild(ta);
+      say(ok ? 'Copied the questions as text.' : 'Copy was blocked here. Select the questions on the page instead.');
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(function(){ say('Copied the questions as text.'); }, fallback);
+    } else { fallback(); }
+  });
+
+  var rail = document.getElementById('rail');
+  var targets = Array.prototype.slice.call(document.querySelectorAll('#overview, article.q, #housekeeping'));
+  targets.forEach(function(t){
+    var a = document.createElement('a');
+    a.href = '#' + t.id;
+    var label = t.id === 'overview' ? 'Goal and must-answers' : (t.dataset.label || t.id);
+    var num = t.querySelector('.num');
+    a.innerHTML = '<span>' + (num ? num.textContent + ' · ' : '') + label + '</span>';
+    a.setAttribute('aria-label', label);
+    rail.appendChild(a);
+  });
+  var dots = rail.querySelectorAll('a');
+  var bar = document.getElementById('progress');
+  function onScroll(){
+    var h = document.documentElement.scrollHeight - innerHeight;
+    bar.style.width = (h > 0 ? (scrollY / h) * 100 : 0) + '%';
+    var idx = 0;
+    targets.forEach(function(t, i){ if (t.getBoundingClientRect().top < innerHeight * 0.35) idx = i; });
+    dots.forEach(function(d, i){ d.classList.toggle('on', i === idx); });
+  }
+  addEventListener('scroll', onScroll, { passive: true });
+  addEventListener('resize', onScroll);
+  onScroll();
+
+  if (location.hash) { var el = document.getElementById(location.hash.slice(1)); if (el) el.scrollIntoView(); }
+})();
+</script>
+
+</body>
+</html>
