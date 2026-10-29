@@ -2,6 +2,20 @@
 
 Invented data only. No real customer, bank or account appears here.
 
+## `excel/`: ready-made workbooks
+
+Each workbook holds a whole batch, so it loads in one upload ("What the file holds: Whole workbook").
+Its first sheet, Readme, explains it and is skipped on upload.
+
+| Workbook | Batch source system | Expected result |
+|---|---|---|
+| `synthetic-batch.xlsx` | blank | The six contracts below, one per check: R-001, B-100 and B-200 PARTIAL; R-002 READY; R-003 and R-004 BLOCKED |
+| `clean-batch.xlsx` | blank | 40 contracts (10 business, 30 retail), no findings, every contract READY: the happy path |
+| `legacycore-batch.xlsx` | `LEGACYCORE` | Users in the fictional core's own columns, mapped by the example profile; `BRANCH_CODE` shown as ignored; 3 contracts READY |
+
+`build_examples.py` rebuilds them (needs `pip install openpyxl`). For volume testing:
+`python build_examples.py --contracts 400`.
+
 ## `synthetic/`: one batch that exercises every Boarding check
 
 Upload the four CSVs into one batch (choose the record type for each), then validate and plan.
