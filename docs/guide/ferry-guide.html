@@ -1,0 +1,1041 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+</head>
+<body>
+<title>Data Migration Ferry Guide</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one reading column (~68ch) inside a 1080px frame; figures and tables use the full frame.
+   Avenza palette: warm paper, ink black, one orange accent. The hero band stays dark in both themes. */
+:root {
+  --paper: #faf8f5; --paper-2: #f2eee8; --surface: #ffffff;
+  --ink: #161b26; --ink-2: #474f60; --ink-3: #7c8496;
+  --line: #e6e1d9; --line-strong: #c8c1b6;
+  --accent: #f28500; --accent-ink: #9a5400; --accent-soft: #fff1de;
+  --night: #0f131c; --night-2: #1b2130; --on-night: #f3f1ec; --on-night-2: #aab1c0;
+  --ok: #1d7f49; --ok-soft: #e4f4ea; --warn: #9a6a00; --warn-soft: #fff4d6; --danger: #c73a3a; --danger-soft: #fde8e7;
+  --water: #e7eef5; --water-line: #c4d3e2;
+  --f-display: "Sora", "Segoe UI", system-ui, sans-serif;
+  --f-body: "Inter", "Segoe UI", system-ui, sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  --measure: 68ch; --frame: 1080px;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --paper: #0f131c; --paper-2: #161b26; --surface: #161b26;
+  --ink: #eef0f4; --ink-2: #b6bcc8; --ink-3: #8a91a1;
+  --line: #262d3b; --line-strong: #3a4354;
+  --accent: #ff9a24; --accent-ink: #ffb259; --accent-soft: #2b1f10;
+  --night: #0a0d14; --night-2: #151a26;
+  --ok: #45b97c; --ok-soft: #12271c; --warn: #e3b341; --warn-soft: #2a2310; --danger: #f07171; --danger-soft: #2c1717;
+  --water: #14202f; --water-line: #24364b; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --paper: #0f131c; --paper-2: #161b26; --surface: #161b26;
+  --ink: #eef0f4; --ink-2: #b6bcc8; --ink-3: #8a91a1;
+  --line: #262d3b; --line-strong: #3a4354;
+  --accent: #ff9a24; --accent-ink: #ffb259; --accent-soft: #2b1f10;
+  --night: #0a0d14; --night-2: #151a26;
+  --ok: #45b97c; --ok-soft: #12271c; --warn: #e3b341; --warn-soft: #2a2310; --danger: #f07171; --danger-soft: #2c1717;
+  --water: #14202f; --water-line: #24364b; color-scheme: dark }
+
+* { box-sizing: border-box; }
+body { background: var(--paper); color: var(--ink); font: 400 17px/1.65 var(--f-body); -webkit-font-smoothing: antialiased; }
+.wrap { max-width: var(--frame); margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+h1, h2, h3, h4 { font-family: var(--f-display); color: var(--ink); text-wrap: balance; margin: 0; }
+h2 { font-size: clamp(26px, 3.4vw, 36px); line-height: 1.2; letter-spacing: -0.01em; }
+h3 { font-size: 21px; line-height: 1.3; margin-top: 8px; }
+h4 { font-size: 16px; }
+p, li { max-width: var(--measure); }
+p { margin: 0; }
+a { color: var(--accent-ink); text-underline-offset: 3px; }
+code, .mono { font-family: var(--f-mono); font-size: 0.86em; }
+:not(pre) > code { background: var(--paper-2); border: 1px solid var(--line); border-radius: 5px; padding: 1px 5px; }
+strong { font-weight: 600; color: var(--ink); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+
+/* Hero */
+.hero { background: var(--night); color: var(--on-night); position: relative; overflow: hidden; }
+.hero::after { content: ""; position: absolute; inset: auto -10% -40% 40%; height: 70%; background: radial-gradient(closest-side, rgba(242,133,0,.28), transparent); pointer-events: none; }
+.hero .wrap { padding-block: 56px 0; position: relative; z-index: 1; display: grid; gap: 28px; }
+.kicker { font: 600 12px/1 var(--f-display); letter-spacing: .16em; text-transform: uppercase; color: #ffb259; display: flex; align-items: center; gap: 10px; }
+.kicker .mark { width: 28px; height: 28px; border-radius: 8px; background: #f28500; display: grid; place-items: center; }
+.hero h1 { font-size: clamp(38px, 6.4vw, 72px); line-height: 1.02; letter-spacing: -0.03em; color: var(--on-night); max-width: 14ch; }
+.hero h1 em { font-style: normal; color: #ff9a24; }
+.hero .lede { font-size: clamp(18px, 2.1vw, 21px); color: var(--on-night-2); max-width: 60ch; }
+.hero .meta { display: flex; flex-wrap: wrap; gap: 10px; }
+.hero .meta span { font-size: 13px; color: var(--on-night-2); border: 1px solid #2c3445; border-radius: 999px; padding: 5px 12px; }
+.hero .meta b { color: var(--on-night); font-weight: 600; }
+.hero-shot { margin-top: 12px; border-radius: 14px 14px 0 0; overflow: hidden; border: 1px solid #2c3445; border-bottom: 0; box-shadow: 0 -10px 60px rgba(0,0,0,.45); }
+.hero-shot img { display: block; width: 100%; height: auto; }
+
+/* Sections */
+main { padding-block: 24px 80px; }
+section.ch { padding-block: 64px 8px; display: grid; gap: 22px; scroll-margin-top: 16px; }
+section.ch + section.ch { border-top: 1px solid var(--line); }
+.ch-head { display: grid; gap: 10px; }
+.ch-num { font: 600 13px/1 var(--f-display); color: var(--accent-ink); letter-spacing: .12em; text-transform: uppercase; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.aud { font: 600 11px/1 var(--f-body); letter-spacing: .06em; text-transform: uppercase; padding: 5px 9px; border-radius: 999px; border: 1px solid var(--line-strong); color: var(--ink-2); }
+.aud.tech { border-color: transparent; background: var(--night-2); color: #ffb259; }
+.intro { font-size: 19px; color: var(--ink-2); max-width: var(--measure); }
+.prose { display: grid; gap: 14px; }
+.prose ul, .prose ol { margin: 0; padding-left: 22px; display: grid; gap: 6px; }
+
+/* TOC */
+.toc { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 0 28px; padding: 22px 24px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; margin-top: 8px; counter-reset: toc; }
+.toc a { display: flex; gap: 12px; padding: 9px 0; border-bottom: 1px dashed var(--line); text-decoration: none; color: var(--ink); font-size: 15px; }
+.toc a::before { counter-increment: toc; content: counter(toc, decimal-leading-zero); font: 500 12px/1.9 var(--f-mono); color: var(--accent-ink); }
+.toc a:hover { color: var(--accent-ink); }
+.toc-head { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; flex-wrap: wrap; margin-top: 40px; }
+.toc-head p { font-size: 15px; color: var(--ink-2); }
+
+/* Cards and grids */
+.grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+.grid > * { min-width: 0; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 20px 22px; display: grid; gap: 8px; align-content: start; }
+.card h4 { display: flex; gap: 10px; align-items: center; }
+.card p { font-size: 15.5px; color: var(--ink-2); }
+.ico { width: 34px; height: 34px; border-radius: 9px; background: var(--accent-soft); color: var(--accent-ink); display: grid; place-items: center; flex: none; }
+.ico svg { width: 18px; height: 18px; }
+.tldr { counter-reset: tl; }
+.tldr .card { position: relative; padding-top: 22px; }
+.tldr .n { font: 700 34px/1 var(--f-display); color: var(--accent); }
+
+/* Callouts */
+.note { border-left: 3px solid var(--accent); background: var(--accent-soft); padding: 14px 18px; border-radius: 0 10px 10px 0; font-size: 16px; max-width: calc(var(--measure) + 40px); }
+.note b { color: var(--accent-ink); }
+.analogy { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 16px; align-items: start; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 18px 20px; max-width: 820px; }
+.analogy .ico { width: 44px; height: 44px; border-radius: 12px; }
+.analogy p { font-size: 16px; color: var(--ink-2); }
+.analogy b { color: var(--ink); }
+
+/* Figures */
+figure { margin: 8px 0; display: grid; gap: 10px; }
+figcaption { font-size: 14px; color: var(--ink-3); max-width: var(--measure); }
+figcaption b { color: var(--ink-2); font-weight: 600; }
+.shot img { display: block; width: 100%; height: auto; border-radius: 12px; border: 1px solid var(--line); box-shadow: 0 12px 34px -18px rgba(22,27,38,.35); background: var(--surface); }
+.shot.narrow { max-width: 820px; }
+.crop { position: relative; max-height: 620px; overflow: hidden; border-radius: 12px; }
+.crop::after { content: ""; position: absolute; inset: auto 0 0 0; height: 120px; background: linear-gradient(transparent, var(--paper)); }
+.phones { display: flex; flex-wrap: wrap; gap: 24px; justify-content: center; }
+.phones figure { width: min(300px, 100%); }
+.phones img { border-radius: 28px; border: 6px solid var(--night); box-shadow: 0 14px 40px -18px rgba(0,0,0,.5); }
+.dgwrap { overflow-x: auto; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 12px; }
+.dgwrap svg { display: block; width: 100%; min-width: 680px; height: auto; }
+.two { display: grid; gap: 24px; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); align-items: start; }
+.two > * { min-width: 0; }
+
+/* Diagram styles (inline SVG reads the page tokens, so both themes work) */
+.dg text { font-family: var(--f-body); font-size: 13px; fill: var(--ink-2); }
+.dg .t { font-family: var(--f-display); font-weight: 600; font-size: 15px; fill: var(--ink); }
+.dg .tl { font-family: var(--f-display); font-weight: 700; font-size: 17px; fill: var(--ink); }
+.dg .m { font-family: var(--f-mono); font-size: 12px; }
+.dg .q { fill: var(--ink-3); font-size: 12px; }
+.dg .c { text-anchor: middle; }
+.dg .box { fill: var(--surface); stroke: var(--line-strong); stroke-width: 1.25; }
+.dg .soft { fill: var(--paper-2); stroke: var(--line); stroke-width: 1; }
+.dg .acc { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 2; }
+.dg .bad { fill: var(--danger-soft); stroke: var(--danger); stroke-width: 1.5; }
+.dg .okb { fill: var(--ok-soft); stroke: var(--ok); stroke-width: 1.5; }
+.dg .wb { fill: var(--warn-soft); stroke: var(--warn); stroke-width: 1.5; }
+.dg .nightb { fill: var(--night-2); stroke: var(--night-2); }
+.dg .ln { stroke: var(--ink-3); stroke-width: 1.5; fill: none; }
+.dg .ln-acc { stroke: var(--accent); stroke-width: 2; fill: none; }
+.dg .ln-bad { stroke: var(--danger); stroke-width: 1.5; fill: none; }
+.dg .dash { stroke-dasharray: 6 6; }
+.dg .on-night { fill: var(--on-night); }
+.dg .badtxt { fill: var(--danger); }
+.dg .oktxt { fill: var(--ok); }
+.dg .acctxt { fill: var(--accent-ink); }
+.dg .water { fill: var(--water); }
+.dg .wave { stroke: var(--water-line); stroke-width: 1.5; fill: none; }
+.ah { fill: var(--ink-3); } .ah-acc { fill: var(--accent); } .ah-bad { fill: var(--danger); }
+
+/* Tables */
+.tbl { overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; font-size: 15px; }
+th, td { text-align: left; vertical-align: top; padding: 11px 14px; border-bottom: 1px solid var(--line); }
+th { font: 600 11.5px/1.3 var(--f-body); text-transform: uppercase; letter-spacing: .07em; color: var(--ink-3); background: var(--paper-2); white-space: nowrap; }
+tr:last-child td { border-bottom: 0; }
+td code { white-space: nowrap; }
+.pill { display: inline-block; font: 600 12px/1 var(--f-body); padding: 5px 9px; border-radius: 999px; white-space: nowrap; }
+.p-ok { background: var(--ok-soft); color: var(--ok); }
+.p-warn { background: var(--warn-soft); color: var(--warn); }
+.p-bad { background: var(--danger-soft); color: var(--danger); }
+.p-acc { background: var(--accent-soft); color: var(--accent-ink); }
+.p-n { background: var(--paper-2); color: var(--ink-2); border: 1px solid var(--line); }
+.tag { font: 500 12px/1 var(--f-mono); color: var(--accent-ink); background: var(--accent-soft); padding: 4px 6px; border-radius: 5px; white-space: nowrap; }
+
+/* Mapping before/after */
+.map { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; background: var(--surface); }
+.map > div { padding: 10px 16px; border-bottom: 1px solid var(--line); font-size: 14.5px; min-width: 0; }
+.map .h { background: var(--paper-2); font: 600 12px/1.4 var(--f-body); letter-spacing: .06em; text-transform: uppercase; color: var(--ink-3); }
+.map .arrow { color: var(--accent); font-weight: 700; text-align: center; background: var(--paper-2); }
+.map .why { display: block; font-size: 12.5px; color: var(--ink-3); }
+.map code { white-space: normal; word-break: break-word; }
+.map > div:nth-last-child(-n+3) { border-bottom: 0; }
+
+/* Technical panels */
+details.tech { border: 1px solid var(--line); border-radius: 14px; background: var(--surface); max-width: 100%; }
+details.tech > summary { cursor: pointer; list-style: none; padding: 16px 20px; display: flex; gap: 12px; align-items: center; font: 600 15px var(--f-display); }
+details.tech > summary::-webkit-details-marker { display: none; }
+details.tech > summary::before { content: "+"; display: grid; place-items: center; width: 24px; height: 24px; border-radius: 6px; background: var(--night-2); color: #ffb259; font: 600 16px/1 var(--f-mono); flex: none; }
+details.tech[open] > summary::before { content: "–"; }
+details.tech > summary .aud { margin-left: auto; }
+details.tech > .body { padding: 4px 20px 20px; display: grid; gap: 14px; }
+details.tech .body p, details.tech .body li { font-size: 15.5px; }
+pre { margin: 0; background: var(--night); color: #e7e9ee; border-radius: 12px; padding: 16px 18px; overflow-x: auto; font: 13px/1.6 var(--f-mono); }
+pre .k { color: #ffb259; } pre .s { color: #9fd6a8; } pre .c { color: #7f889a; }
+
+/* Timeline of work so far */
+.story { list-style: none; padding: 0; margin: 0; display: grid; gap: 0; max-width: 860px; }
+.story li { display: grid; grid-template-columns: 110px 22px minmax(0, 1fr); gap: 14px; max-width: none; }
+.story .when { font: 500 13px/1.5 var(--f-mono); color: var(--ink-3); text-align: right; padding-top: 2px; }
+.story .rail { position: relative; }
+.story .rail::before { content: ""; position: absolute; left: 10px; top: 0; bottom: 0; width: 2px; background: var(--line); }
+.story .rail::after { content: ""; position: absolute; left: 4px; top: 6px; width: 14px; height: 14px; border-radius: 50%; background: var(--surface); border: 3px solid var(--accent); }
+.story li:last-child .rail::before { bottom: auto; height: 12px; }
+.story .what { padding-bottom: 22px; display: grid; gap: 4px; }
+.story .what b { font-family: var(--f-display); font-size: 16px; }
+.story .what span { font-size: 15px; color: var(--ink-2); }
+.story .what code { font-size: 12px; }
+
+/* Roadmap */
+.road { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); counter-reset: road; }
+.road .card { gap: 6px; }
+.road .card.done { border-color: var(--ok); }
+.road .card.next { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.road .top { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.road .num { font: 700 26px/1 var(--f-display); color: var(--ink-3); }
+.road .done .num { color: var(--ok); } .road .next .num { color: var(--accent); }
+
+/* FAQ */
+.faq { display: grid; gap: 10px; max-width: 860px; }
+.faq details { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; }
+.faq summary { cursor: pointer; padding: 14px 18px; font: 600 16px var(--f-display); list-style: none; display: flex; justify-content: space-between; gap: 12px; }
+.faq summary::-webkit-details-marker { display: none; }
+.faq summary::after { content: "+"; color: var(--accent); font: 600 20px/1 var(--f-mono); }
+.faq details[open] summary::after { content: "–"; }
+.faq details > div { padding: 0 18px 16px; color: var(--ink-2); font-size: 16px; display: grid; gap: 8px; }
+
+.locks { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+.lock { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 18px; display: grid; gap: 8px; align-content: start; }
+.lock .k { width: 40px; height: 40px; border-radius: 50%; background: var(--night-2); color: #ffb259; display: grid; place-items: center; }
+.lock p { font-size: 15px; color: var(--ink-2); }
+.verdict { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+.verdict > div { min-width: 0; display: grid; gap: 8px; }
+.verdict .lbl { font: 600 13px var(--f-display); display: flex; gap: 8px; align-items: center; }
+
+footer { border-top: 1px solid var(--line); padding-block: 28px 48px; color: var(--ink-3); font-size: 14px; }
+footer .wrap { display: flex; flex-wrap: wrap; gap: 8px 24px; justify-content: space-between; }
+
+@media (max-width: 640px) {
+  body { font-size: 16px; }
+  section.ch { padding-block: 44px 4px; }
+  .story li { grid-template-columns: 70px 22px minmax(0, 1fr); gap: 10px; }
+  .map { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .map .arrow { display: none; }
+  .map > div:nth-last-child(-n+3) { border-bottom: 1px solid var(--line); }
+}
+@media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="ah"/></marker>
+    <marker id="arr-acc" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="ah-acc"/></marker>
+    <marker id="arr-bad" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="ah-bad"/></marker>
+  </defs>
+</svg>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="kicker"><span class="mark"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#161b26" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17c1.5 1.3 3 1.3 4.5 0s3-1.3 4.5 0 3 1.3 4.5 0 3-1.3 4.5 0"/><path d="M5 14l1-5h12l1 5"/><path d="M9 9V6h6v3"/></svg></span>A plain-language guide · v0.1</div>
+    <h1>How <em>Data Migration Ferry</em> works</h1>
+    <p class="lede">What the tool does, why we built it this way, everything finished so far, how to try it yourself, and what comes next. Written for anyone on the project: no coding knowledge needed, with optional deep-dives for engineers.</p>
+    <div class="meta">
+      <span>Updated <b>29 October 2026</b></span>
+      <span>Built so far: <b>Steps 1–2 of 8</b></span>
+      <span>Live calls to Temenos: <b>off</b></span>
+      <span>Reading time: <b>about 25 minutes</b></span>
+    </div>
+    <figure class="hero-shot"><img src="img/hero-dark.webp" width="2880" height="1800" alt="The Ferry console in dark mode, showing the Boarding screen with a four-step progress bar, the batch card, file loading, and validation results."></figure>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="toc-head">
+    <h2 style="font-size:22px">In this guide</h2>
+    <p>Sections marked <span class="aud tech">Technical</span> are optional. Everything else is for everyone.</p>
+  </div>
+  <nav class="toc" aria-label="Contents">
+    <a href="#short">The short version</a>
+    <a href="#problem">The problem we are solving</a>
+    <a href="#metaphor">Why a ferry? The four stages</a>
+    <a href="#words">Words you will meet</a>
+    <a href="#story">What we have done so far</a>
+    <a href="#boarding">Boarding, step by step</a>
+    <a href="#samples">The test data, and what it proves</a>
+    <a href="#assumptions">Working without all the answers</a>
+    <a href="#safety">Safety by design</a>
+    <a href="#console">The console: looks and room to grow</a>
+    <a href="#inside">Under the hood</a>
+    <a href="#try">Try it yourself</a>
+    <a href="#next">What comes next</a>
+    <a href="#faq">Questions people ask</a>
+  </nav>
+
+  <!-- 1 -->
+  <section class="ch" id="short">
+    <div class="ch-head"><div class="ch-num">Chapter 1 <span class="aud">Everyone</span></div><h2>The short version</h2></div>
+    <p class="intro">If you read nothing else, read these five cards.</p>
+    <div class="grid tldr">
+      <div class="card"><span class="n">1</span><h4>It moves customers into Temenos Digital</h4><p>Ferry takes customer data from a bank's old system and creates the same customers in Temenos Digital: their contracts, accounts, users and approval groups.</p></div>
+      <div class="card"><span class="n">2</span><h4>It works with any old system</h4><p>Nothing is built for one bank. Each bank's files are translated into one standard format by a small settings file, with no code change.</p></div>
+      <div class="card"><span class="n">3</span><h4>It checks everything first</h4><p>Before anything is sent, Ferry finds every record that would fail and builds an exact, reviewable plan of every call it would make.</p></div>
+      <div class="card"><span class="n">4</span><h4>It works around open questions</h4><p>Where Temenos or the bank has not answered yet, Ferry makes a named, switchable assumption and marks every record that relied on it.</p></div>
+      <div class="card"><span class="n">5</span><h4>Today it only prepares</h4><p>The checking and planning half is built and tested. Sending to Temenos is the next step. Until then, nothing leaves the machine.</p></div>
+    </div>
+  </section>
+
+  <!-- 2 -->
+  <section class="ch" id="problem">
+    <div class="ch-head"><div class="ch-num">Chapter 2 <span class="aud">Everyone</span></div><h2>The problem we are solving</h2></div>
+    <div class="prose">
+      <p class="intro">When a bank moves to Temenos Digital for online and mobile banking, every existing digital customer has to be recreated in the new platform. For a business customer that means far more than a name and a password.</p>
+      <p>Take a small company that banks online. In the new platform it needs a <strong>contract</strong> (its online-banking agreement), the <strong>customer numbers and accounts</strong> that belong to it, each <strong>person</strong> who logs in with their role, the <strong>groups</strong> that approve payments, the <strong>approval rules</strong> (who must approve what amount), <strong>limits</strong> and saved <strong>payees</strong>. Multiply that by thousands of customers.</p>
+      <p>Temenos provides a set of official web services for exactly this, called the <strong>DataMigration APIs</strong>: one call creates a contract, another links a user to it, another creates an approval group, and so on. Calling them is easy. Calling them <em>well</em>, at volume, is hard:</p>
+    </div>
+    <div class="grid">
+      <div class="card"><h4><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M4 12h10M4 17h7"/></svg></span>Every source is different</h4><p>Each old system exports its own column names, codes and date formats. Spreadsheets also quietly drop leading zeros from customer and account numbers.</p></div>
+      <div class="card"><h4><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9L2.4 18a2 2 0 001.7 3h15.8a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z"/></svg></span>Bad data is expensive</h4><p>A bad record found half-way through a live run leaves a customer half-built in the new platform, which someone then has to clean up.</p></div>
+      <div class="card"><h4><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg></span>Order matters</h4><p>A user can only be added to a contract that exists. An approval group can only hold users that exist. Each step needs an ID that the previous step created.</p></div>
+      <div class="card"><h4><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 014-4h14M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 01-4 4H3"/></svg></span>Reruns must be safe</h4><p>Runs will be repeated. The tool must remember what it already created, so a second run never creates a customer twice.</p></div>
+      <div class="card"><h4><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 015.8 1c0 2-3 3-3 3M12 17h.01"/></svg></span>Some answers are missing</h4><p>The vendor material leaves real questions open, such as how approval brackets should meet. We cannot wait for every answer before building.</p></div>
+      <div class="card"><h4><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg></span>Proof is required</h4><p>At sign-off, the bank will ask what was migrated, what failed and why. Every item needs evidence, line by line.</p></div>
+    </div>
+    <div class="analogy">
+      <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-6 9 6v11a1 1 0 01-1 1H4a1 1 0 01-1-1z"/><path d="M9 21V12h6v9"/></svg></span>
+      <p><b>An everyday comparison.</b> Moving house with a professional mover: before the truck leaves, they label every box, check nothing is broken, and agree the order of unloading (furniture before the boxes that go inside it). They keep an inventory, so at the other end you can tick off what arrived. Ferry does the same for customer data.</p>
+    </div>
+  </section>
+
+  <!-- 3 -->
+  <section class="ch" id="metaphor">
+    <div class="ch-head"><div class="ch-num">Chapter 3 <span class="aud">Everyone</span></div><h2>Why a ferry? The four stages</h2></div>
+    <p class="intro">The name is the map. Customer records are passengers. They board on the old side, cross to the new side, are checked off against a manifest on arrival, and, if needed, can be brought back.</p>
+    <figure>
+      <div class="dgwrap">
+        <svg class="dg" viewBox="0 0 1000 430" role="img" aria-label="A ferry carries customer records from the old system to Temenos Digital in four stages: Boarding, Crossing, Manifest and Return Crossing.">
+          <rect x="0" y="252" width="1000" height="178" class="water"/>
+          <path class="wave" d="M0 272 q25 -8 50 0 t50 0 t50 0 t50 0 t50 0 t50 0 t50 0 t50 0 t50 0 t50 0 t50 0 t50 0 t50 0 t50 0 t50 0 t50 0 t50 0 t50 0 t50 0 t50 0"/>
+          <path class="wave" d="M-25 330 q25 -8 50 0 t50 0 t50 0 t50 0 t50 0 t50 0 t50 0 t50 0 t50 0 t50 0 t50 0 t50 0 t50 0 t50 0 t50 0 t50 0 t50 0 t50 0 t50 0 t50 0 t50 0"/>
+          <!-- stage labels -->
+          <g><text class="tl c" x="135" y="34">1 · Boarding</text><text class="c" x="135" y="54">load, check and plan</text><rect x="104" y="64" width="62" height="22" rx="11" class="okb"/><text class="c oktxt" x="135" y="79" style="font-size:12px;font-weight:600">Built</text></g>
+          <g><text class="tl c" x="500" y="34">2 · Crossing</text><text class="c" x="500" y="54">send, in the right order</text><rect x="472" y="64" width="56" height="22" rx="11" class="acc" style="stroke-width:1.25"/><text class="c acctxt" x="500" y="79" style="font-size:12px;font-weight:600">Next</text></g>
+          <g><text class="tl c" x="865" y="34">3 · Manifest</text><text class="c" x="865" y="54">prove what arrived</text><rect x="827" y="64" width="76" height="22" rx="11" class="soft"/><text class="c" x="865" y="79" style="font-size:12px;font-weight:600">Planned</text></g>
+          <!-- left: source files -->
+          <g>
+            <path d="M40 120h40l14 14v76h-54z" class="box"/><path d="M80 120v14h14" class="ln"/><text class="c m" x="67" y="180">.xlsx</text>
+            <path d="M110 120h40l14 14v76h-54z" class="box"/><path d="M150 120v14h14" class="ln"/><text class="c m" x="137" y="180">.csv</text>
+            <path d="M180 120h40l14 14v76h-54z" class="box"/><path d="M220 120v14h14" class="ln"/><text class="c m" x="207" y="180">extract</text>
+            <rect x="20" y="222" width="230" height="30" rx="4" class="nightb"/>
+            <line x1="45" y1="252" x2="45" y2="290" class="ln"/><line x1="225" y1="252" x2="225" y2="290" class="ln"/>
+            <text class="t c" x="135" y="296">The old system</text><text class="c" x="135" y="314">any core banking export</text>
+          </g>
+          <!-- boat -->
+          <g>
+            <path d="M372 232h256l-28 40H400z" fill="var(--accent)"/>
+            <rect x="432" y="190" width="136" height="42" rx="6" class="nightb"/>
+            <rect x="446" y="200" width="18" height="14" rx="3" fill="var(--accent-soft)"/><rect x="474" y="200" width="18" height="14" rx="3" fill="var(--accent-soft)"/><rect x="502" y="200" width="18" height="14" rx="3" fill="var(--accent-soft)"/><rect x="530" y="200" width="18" height="14" rx="3" fill="var(--accent-soft)"/>
+            <rect x="490" y="160" width="20" height="30" rx="3" class="nightb"/>
+            <rect x="388" y="214" width="34" height="18" rx="3" class="box"/><rect x="578" y="214" width="34" height="18" rx="3" class="box"/>
+            <path d="M330 262 q12 -6 24 0 M300 268 q12 -6 24 0" class="wave"/>
+            <text class="c" x="500" y="300" style="fill:var(--ink)">contracts · accounts · users · groups</text>
+          </g>
+          <!-- right: Temenos -->
+          <g>
+            <path d="M800 140l65 -38 65 38z" class="box"/>
+            <rect x="808" y="140" width="114" height="82" class="box"/>
+            <rect x="826" y="160" width="20" height="20" rx="2" class="soft"/><rect x="855" y="160" width="20" height="20" rx="2" class="soft"/><rect x="884" y="160" width="20" height="20" rx="2" class="soft"/>
+            <rect x="852" y="190" width="26" height="32" rx="2" class="acc" style="stroke-width:1.25"/>
+            <rect x="750" y="222" width="230" height="30" rx="4" class="nightb"/>
+            <line x1="775" y1="252" x2="775" y2="290" class="ln"/><line x1="955" y1="252" x2="955" y2="290" class="ln"/>
+            <text class="t c" x="865" y="296">Temenos Digital</text><text class="c" x="865" y="314">through its DataMigration APIs</text>
+          </g>
+          <!-- return crossing -->
+          <path d="M850 334 Q500 456 150 334" class="ln dash" style="stroke:var(--accent-ink)" marker-end="url(#arr-acc)"/>
+          <text class="t c" x="500" y="352">4 · Return Crossing</text>
+          <text class="c" x="500" y="371">undo selected customers, only what Ferry itself created</text>
+        </svg>
+      </div>
+      <figcaption><b>Figure 1.</b> The whole journey. Boarding is built and tested. Crossing is next. Manifest and Return Crossing follow.</figcaption>
+    </figure>
+    <div class="tbl">
+      <table>
+        <thead><tr><th>Stage</th><th>In plain words</th><th>What it produces</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Boarding</strong></td><td>Load the bank's files, translate them to one standard format, check every record, and plan every call.</td><td>A list of problems to fix, and an exact dry-run plan per customer</td><td><span class="pill p-ok">Built</span></td></tr>
+          <tr><td><strong>Crossing</strong></td><td>Sign in to Temenos and carry out the plan, a few customers at a time, each customer's steps in order.</td><td>Customers created in Temenos; every new ID recorded</td><td><span class="pill p-acc">Next</span></td></tr>
+          <tr><td><strong>Manifest</strong></td><td>Show the evidence: what worked, what failed and why, and compare with Temenos's own reconciliation report.</td><td>Results per item and per step, Excel export</td><td><span class="pill p-n">Planned</span></td></tr>
+          <tr><td><strong>Return Crossing</strong></td><td>Remove selected customers again through Temenos's delete service, after a preview.</td><td>A clean slate for a re-run</td><td><span class="pill p-n">Planned</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- 4 -->
+  <section class="ch" id="words">
+    <div class="ch-head"><div class="ch-num">Chapter 4 <span class="aud">Everyone</span></div><h2>Words you will meet</h2></div>
+    <p class="intro">A handful of banking and tool terms carry the rest of this guide. Here they are, with one picture of how they fit together.</p>
+    <figure>
+      <div class="dgwrap">
+        <svg class="dg" viewBox="0 0 1000 410" role="img" aria-label="A contract holds customer numbers with their accounts, users who log in, and signatory groups made of those users.">
+          <g>
+            <rect x="350" y="16" width="300" height="88" rx="10" class="acc"/>
+            <text class="t c" x="500" y="44">Contract B-100</text>
+            <text class="c" x="500" y="66">the company's online-banking agreement</text>
+            <text class="c m" x="500" y="88">service definition: BUSINESS</text>
+          </g>
+          <path d="M500 104V128H170V150" class="ln" marker-end="url(#arr)"/>
+          <path d="M500 104V150" class="ln" marker-end="url(#arr)"/>
+          <path d="M500 128H830V150" class="ln" marker-end="url(#arr)"/>
+          <g>
+            <rect x="20" y="152" width="300" height="240" rx="10" class="box"/>
+            <text class="t" x="40" y="182">Customers and accounts</text>
+            <text x="40" y="202">each CIF brings its own accounts</text>
+            <rect x="40" y="218" width="260" height="72" rx="8" class="soft"/>
+            <text class="m" x="56" y="242" style="fill:var(--ink)">CIF 045000100 (primary)</text>
+            <text class="m" x="56" y="266">└ account 04510000010001</text>
+            <rect x="40" y="302" width="260" height="72" rx="8" class="soft"/>
+            <text class="m" x="56" y="326" style="fill:var(--ink)">CIF 060000200</text>
+            <text class="m" x="56" y="350">└ account 06010000020001</text>
+          </g>
+          <g>
+            <rect x="350" y="152" width="300" height="240" rx="10" class="box"/>
+            <text class="t" x="370" y="182">Users</text>
+            <text x="370" y="202">the people who log in, each with a role</text>
+            <rect x="370" y="218" width="260" height="46" rx="8" class="soft"/>
+            <text x="386" y="238" style="fill:var(--ink);font-weight:600">U-B100-A · Admin</text><text class="q" x="386" y="255">linked: has their own CIF</text>
+            <rect x="370" y="272" width="260" height="46" rx="8" class="soft"/>
+            <text x="386" y="292" style="fill:var(--ink);font-weight:600">U-B100-M · Accountant</text><text class="q" x="386" y="309">virtual: personal details only</text>
+            <rect x="370" y="326" width="260" height="46" rx="8" class="soft"/>
+            <text x="386" y="346" style="fill:var(--ink);font-weight:600">U-B100-C · Accountant</text><text class="q" x="386" y="363">virtual: personal details only</text>
+          </g>
+          <g>
+            <rect x="680" y="152" width="300" height="240" rx="10" class="box"/>
+            <text class="t" x="700" y="182">Signatory groups</text>
+            <text x="700" y="202">who approves payments, as a team</text>
+            <rect x="700" y="218" width="260" height="72" rx="8" class="soft"/>
+            <text x="716" y="242" style="fill:var(--ink);font-weight:600">Approvers A</text><text class="q" x="716" y="264">members: U-B100-A, U-B100-M</text>
+            <rect x="700" y="302" width="260" height="72" rx="8" class="soft"/>
+            <text x="716" y="326" style="fill:var(--ink);font-weight:600">Approvers B</text><text class="q" x="716" y="348">members: U-B100-C</text>
+          </g>
+        </svg>
+      </div>
+      <figcaption><b>Figure 2.</b> One business customer from our test data. A retail (personal) customer is simpler: usually one CIF, a few accounts and one user, with no signatory groups.</figcaption>
+    </figure>
+
+    <div class="grid">
+      <div class="card"><h4>Contract</h4><p>A customer's online-banking agreement in Temenos Digital. The unit of work in Ferry: everything else hangs off it.</p></div>
+      <div class="card"><h4>CIF</h4><p>Customer Information File number: the bank's ID for a customer in the core system, e.g. <code>045000100</code>. Leading zeros matter.</p></div>
+      <div class="card"><h4>Service definition</h4><p>The package a contract gets (for example retail or business), which decides the features and permissions available.</p></div>
+      <div class="card"><h4>Role</h4><p>What a user may do: administrator, accountant, standard user. Each maps to a role ID configured in Temenos.</p></div>
+      <div class="card"><h4>Linked user</h4><p>A user who is also a bank customer with their own CIF. Temenos fetches their details from the core banking system.</p></div>
+      <div class="card"><h4>Virtual user</h4><p>A user with no CIF of their own, such as a company's accountant. Temenos needs all their personal details supplied.</p></div>
+      <div class="card"><h4>Signatory group</h4><p>A named team of users who approve payments together, used by business customers' approval rules.</p></div>
+      <div class="card"><h4>Legal entity</h4><p>The bank entity the contract belongs to. Usually one default per environment.</p></div>
+      <div class="card"><h4>Batch</h4><p>One set of source files that travel together through Ferry, e.g. "Retail mock run 1".</p></div>
+      <div class="card"><h4>Canonical model</h4><p>Ferry's one standard format for contracts, accounts, users and groups. Every source system is translated into it.</p></div>
+      <div class="card"><h4>Mapping profile</h4><p>A small settings file that tells Ferry how one source system's columns and codes translate into the standard format.</p></div>
+      <div class="card"><h4>Finding</h4><p>A problem found by a check. An <span class="pill p-bad">error</span> stops the record. A <span class="pill p-warn">warning</span> is only reported.</p></div>
+      <div class="card"><h4>Voyage</h4><p>The plan for one contract: the ordered list of calls Ferry will make to create it and everything under it.</p></div>
+      <div class="card"><h4>Dry run</h4><p>Working out exactly what would be sent, without sending anything. Everything Ferry does today is a dry run.</p></div>
+      <div class="card"><h4>Assumption</h4><p>A named, switchable decision (A-01 to A-12) Ferry makes where Temenos or the bank has not answered a question yet.</p></div>
+      <div class="card"><h4>ID register</h4><p>Ferry's memory: which old ID became which new Temenos ID, per environment. It stops a rerun from creating anything twice.</p></div>
+    </div>
+  </section>
+
+  <!-- 5 -->
+  <section class="ch" id="story">
+    <div class="ch-head"><div class="ch-num">Chapter 5 <span class="aud">Everyone</span></div><h2>What we have done so far</h2></div>
+    <p class="intro">From reading the vendor material to a working, tested Boarding stage. Seven saved versions of the code, each with a clear purpose.</p>
+    <ol class="story">
+      <li><span class="when">Before</span><span class="rail"></span><div class="what"><b>Earlier migrations used client-specific tooling</b><span>Earlier work relied on a tool and database scripts written for one client. It worked, but could not be reused for another bank, and rollback was hand-built.</span></div></li>
+      <li><span class="when">27 Oct</span><span class="rail"></span><div class="what"><b>Studied the official Temenos method</b><span>We read the Temenos guide "Temenos Digital Data Migration and flows" and its Postman collection, which describe the DataMigration APIs, their order and their payloads. Points that were unclear went into a <a href="https://claude.ai/artifact/7F9WP5UFUP195irVnVVjMm">call sheet for the Temenos product team</a>, most critical first.</span></div></li>
+      <li><span class="when">27 Oct</span><span class="rail"></span><div class="what"><b>Decided to build our own standalone tool</b><span>One tool for any bank and any source system, with no client specifics in the code. Unanswered questions would not block us: each becomes a named assumption, to be confirmed later. Name chosen: <strong>Data Migration Ferry</strong>.</span></div></li>
+      <li><span class="when">27 Oct</span><span class="rail"></span><div class="what"><b>Design written and approved</b><span>Five principles, four stages, the standard data model, safety gates, twelve assumptions and an eight-step build order, all in <code>docs/DESIGN.md</code>.</span></div></li>
+      <li><span class="when">27 Oct</span><span class="rail"></span><div class="what"><b>Step 1: the skeleton</b><span>The server and the browser console, strict settings files, the run log, the audit trail and the ID register. <code>c43fca5</code> <code>a121058</code></span></div></li>
+      <li><span class="when">27 Oct</span><span class="rail"></span><div class="what"><b>Step 2: Boarding</b><span>File templates, file reading that keeps leading zeros, mapping profiles, three layers of checks and the dry-run plan, then the Boarding screens and fixes found in a live check. <code>d0c7cdd</code> <code>a20f092</code></span></div></li>
+      <li><span class="when">27 Oct</span><span class="rail"></span><div class="what"><b>New look, built to grow</b><span>The console was restyled in the Avenza black and orange, with light and dark themes. Each feature became a plug-in module, so new stages slot in without rework. <code>1fba962</code></span></div></li>
+      <li><span class="when">29 Oct</span><span class="rail"></span><div class="what"><b>Ready-made Excel test files</b><span>Three workbooks, from a six-customer "every check" batch to a clean 40-customer batch, each verified end to end. <code>94e3275</code></span></div></li>
+    </ol>
+    <div class="note"><b>Where the work lives.</b> Everything is in the Git repository <code>Data_Migration_Ferry</code>, branch <code>main</code>. All changes are saved locally and have not been pushed to GitHub yet.</div>
+  </section>
+
+  <!-- 6 -->
+  <section class="ch" id="boarding">
+    <div class="ch-head"><div class="ch-num">Chapter 6 <span class="aud">Everyone</span></div><h2>Boarding, step by step</h2></div>
+    <p class="intro">Boarding is one screen with four steps, top to bottom. A progress bar at the top shows where the current batch stands.</p>
+    <figure class="shot narrow"><img src="img/stepper.webp" alt="The progress bar: Batch, Load files with 31 records, Validate (checked) and Plan (dry run ready), all ticked, above the batch card." loading="lazy"><figcaption><b>Figure 3.</b> The progress bar and batch card. Each step ticks green when done; the next one to do is highlighted in orange.</figcaption></figure>
+
+    <h3>Step 1 · Create a batch</h3>
+    <div class="prose">
+      <p>A batch is a container for one set of files that belong together, such as "Retail mock run 1". You give it a name and, optionally, the name of the source system (for example <code>LEGACYCORE</code>). The source system tells Ferry which translation rules to use for that batch's files.</p>
+      <p>Batches are kept, so you can switch between them, compare runs, and come back later.</p>
+    </div>
+
+    <h3>Step 2 · Load files</h3>
+    <div class="prose">
+      <p>You load Excel or CSV files: one workbook with a sheet per record type (Contracts, Accounts, Users, Signatory Groups), or one file per type. Ferry offers a ready-made <strong>template workbook</strong> with the right column names and a sheet of instructions.</p>
+      <p>Two details make this step trustworthy:</p>
+      <ul>
+        <li><strong>Every value is read as text.</strong> Spreadsheets love to turn <code>001000111</code> into <code>1000111</code>. Ferry reads exactly what the cell shows, so customer and account numbers keep their leading zeros.</li>
+        <li><strong>Other systems' files are translated, not rewritten by hand.</strong> If the bank's export uses its own column names and codes, a <em>mapping profile</em> translates them on the way in.</li>
+      </ul>
+    </div>
+    <figure class="shot"><img src="img/upload-legacy.webp" alt="The Load files card after loading legacycore-batch.xlsx: contracts and accounts read with template headers, users read through the example-legacycore-user profile, with BRANCH_CODE listed as an ignored column." loading="lazy"><figcaption><b>Figure 4.</b> Loading a workbook from a fictional core system called LEGACYCORE. The Users sheet went through its mapping profile. One column, <code>BRANCH_CODE</code>, is not needed and is shown as ignored, so nothing is dropped silently.</figcaption></figure>
+
+    <p>Here is what the mapping profile did to one user row from that file:</p>
+    <div class="map" role="table" aria-label="One LEGACYCORE user row before and after mapping">
+      <div class="h" role="columnheader">In the bank's export</div><div class="h arrow" role="columnheader">→</div><div class="h" role="columnheader">In Ferry's standard format</div>
+      <div><code>LOGIN_ID</code> quay.maker</div><div class="arrow">→</div><div><code>userRef</code> quay.maker<span class="why">column renamed</span></div>
+      <div><code>ROLE_CODE</code> F</div><div class="arrow">→</div><div><code>roleRef</code> ACCOUNTANT<span class="why">code translated: A = Admin, U = User, F = Accountant</span></div>
+      <div><code>USER_KIND</code> N</div><div class="arrow">→</div><div><code>userType</code> VIRTUAL<span class="why">code translated: C = linked, N = virtual</span></div>
+      <div><code>MOBILE</code> 9123-45674</div><div class="arrow">→</div><div><code>phone</code> 912345674<span class="why">only the digits kept</span></div>
+      <div><code>BIRTH_DT</code> 22/09/1992</div><div class="arrow">→</div><div><code>dateOfBirth</code> 1992-09-22<span class="why">date converted from day/month/year</span></div>
+      <div><code>EMAIL_ADDR</code> LEO.GRANT@example.test</div><div class="arrow">→</div><div><code>email</code> leo.grant@example.test<span class="why">lower-cased (from another row)</span></div>
+      <div><span class="q" style="color:var(--ink-3)">(not in the file)</span></div><div class="arrow">→</div><div><code>phoneCountryCode</code> 95<span class="why">default filled in by the profile</span></div>
+      <div><code>BRANCH_CODE</code> 060</div><div class="arrow">→</div><div><span style="color:var(--ink-3)">ignored</span><span class="why">not needed by Temenos; reported, not lost</span></div>
+    </div>
+    <div class="note"><b>Why this matters.</b> Onboarding a new bank or a new source system means writing one small settings file like this. No programmer, no new release.</div>
+
+    <details class="tech">
+      <summary>How file reading and mapping work <span class="aud tech">Technical</span></summary>
+      <div class="body">
+        <p><code>SheetReader</code> reads <code>.xlsx</code>, <code>.xls</code> and <code>.csv</code> with Apache POI and Commons CSV, always through a <code>DataFormatter</code>, so each cell is taken exactly as displayed. Byte-order marks are dropped; non-breaking spaces become plain spaces. Sheets named Instructions, Readme or Notes are skipped; an empty sheet is skipped rather than failing the workbook.</p>
+        <p><code>MappingService</code> resolves each source column in order: an explicit entry in the profile's <code>columns</code>, then the template label (the trailing <code>*</code> on required headers is ignored), then the canonical field name. It then applies <code>transforms</code> (<code>trim</code>, <code>upper</code>, <code>lower</code>, <code>digits</code>, <code>list</code>, <code>date:&lt;pattern&gt;</code>), then <code>valueMaps</code>, then <code>defaults</code>. Profiles are read fresh from <code>config/mapping-profiles</code> on every upload, so an edit applies without a restart.</p>
+        <p>Profile choice on upload: an explicitly chosen profile wins; otherwise the batch's source system plus the record type picks one automatically; otherwise template headers are assumed. Loading a record type again replaces that type in the batch and sends the batch back to "staged", so findings and plan always match the data.</p>
+<pre><span class="c">// config/mapping-profiles/example-legacycore-user.json (abridged)</span>
+{ <span class="k">"id"</span>: <span class="s">"example-legacycore-user"</span>, <span class="k">"sourceSystem"</span>: <span class="s">"LEGACYCORE"</span>, <span class="k">"recordType"</span>: <span class="s">"USER"</span>,
+  <span class="k">"columns"</span>:    { <span class="k">"LOGIN_ID"</span>: <span class="s">"userRef"</span>, <span class="k">"ROLE_CODE"</span>: <span class="s">"roleRef"</span>, <span class="k">"BIRTH_DT"</span>: <span class="s">"dateOfBirth"</span>, … },
+  <span class="k">"defaults"</span>:   { <span class="k">"phoneCountryCode"</span>: <span class="s">"95"</span> },
+  <span class="k">"transforms"</span>: { <span class="k">"phone"</span>: <span class="s">"digits"</span>, <span class="k">"dateOfBirth"</span>: <span class="s">"date:dd/MM/yyyy"</span>, <span class="k">"email"</span>: <span class="s">"lower"</span> },
+  <span class="k">"valueMaps"</span>:  { <span class="k">"userType"</span>: { <span class="k">"C"</span>: <span class="s">"LINKED"</span>, <span class="k">"N"</span>: <span class="s">"VIRTUAL"</span> },
+                  <span class="k">"roleRef"</span>:  { <span class="k">"A"</span>: <span class="s">"ADMIN"</span>, <span class="k">"U"</span>: <span class="s">"USER"</span>, <span class="k">"F"</span>: <span class="s">"ACCOUNTANT"</span> } } }</pre>
+      </div>
+    </details>
+
+    <h3>Step 3 · Validate</h3>
+    <div class="prose">
+      <p>Validation is where Ferry earns its keep. Every record passes through three layers of checks. Anything that fails becomes a <strong>finding</strong>, with the row, the field and a plain explanation.</p>
+    </div>
+    <figure>
+      <div class="dgwrap">
+        <svg class="dg" viewBox="0 0 1000 334" role="img" aria-label="Records pass three layers of checks. Problems become findings; clean records go on to the plan.">
+          <rect x="20" y="40" width="170" height="110" rx="10" class="box"/>
+          <text class="t c" x="105" y="84">Loaded records</text><text class="c" x="105" y="106">contracts, accounts,</text><text class="c" x="105" y="124">users, groups</text>
+          <path d="M190 95H226" class="ln" marker-end="url(#arr)"/>
+          <rect x="230" y="40" width="220" height="110" rx="10" class="box"/>
+          <text class="t" x="248" y="68">1 · Field rules</text><text x="248" y="92">Is anything required missing?</text><text x="248" y="110">Is a date a real date? Is a</text><text x="248" y="128">contract listed twice?</text>
+          <path d="M450 95H486" class="ln" marker-end="url(#arr)"/>
+          <rect x="490" y="40" width="230" height="110" rx="10" class="box"/>
+          <text class="t" x="508" y="68">2 · Cross-record checks</text><text x="508" y="92">Does the contract exist?</text><text x="508" y="110">Is the role configured?</text><text x="508" y="128">Does it have accounts?</text>
+          <path d="M720 95H756" class="ln" marker-end="url(#arr)"/>
+          <rect x="760" y="40" width="220" height="110" rx="10" class="box"/>
+          <text class="t" x="778" y="68">3 · Temenos's rules</text><text x="778" y="92">What would the vendor refuse?</text><text x="778" y="110">Missing virtual-user details,</text><text x="778" y="128">duplicate group names …</text>
+          <path d="M340 150V204" class="ln-bad dash" marker-end="url(#arr-bad)"/>
+          <path d="M605 150V204" class="ln-bad dash" marker-end="url(#arr-bad)"/>
+          <path d="M800 150V180H700V204" class="ln-bad dash" marker-end="url(#arr-bad)"/>
+          <path d="M900 150V204" class="ln-acc" marker-end="url(#arr-acc)"/>
+          <rect x="230" y="208" width="490" height="96" rx="10" class="bad"/>
+          <text class="t" x="250" y="238">Findings</text>
+          <text x="250" y="262">Error: the record cannot travel until it is fixed.</text>
+          <text x="250" y="282">Warning: reported, the record still travels.</text>
+          <rect x="760" y="208" width="220" height="96" rx="10" class="acc"/>
+          <text class="t c" x="870" y="246">Clean records</text><text class="c" x="870" y="270">go on to the plan</text>
+          <text class="q" x="234" y="322">each layer adds its own findings</text>
+        </svg>
+      </div>
+      <figcaption><b>Figure 5.</b> Three layers of checks. Field rules are settings; the other two layers are built into Ferry and its Temenos adapter.</figcaption>
+    </figure>
+    <figure class="shot"><img src="img/validate-checks.webp" alt="The Validate card for the synthetic test batch: 20 valid records, 9 invalid, 2 left out by assumption, 11 errors and 2 warnings, with a table of ten checks and an example of each." loading="lazy"><figcaption><b>Figure 6.</b> Validation of our "every check" test batch. The <b>By check</b> view groups findings, with an example and the assumption involved (here A-08 and A-09).</figcaption></figure>
+    <figure class="shot"><img src="img/validate-rows.webp" alt="The Every finding view listing each finding with its row number, record, field and message." loading="lazy"><figcaption><b>Figure 7.</b> The <b>Every finding</b> view: one line per problem, with the spreadsheet row so it can be fixed at source.</figcaption></figure>
+
+    <div class="tbl">
+      <table>
+        <thead><tr><th>Check</th><th>What it catches, in plain words</th><th>Severity</th></tr></thead>
+        <tbody>
+          <tr><td colspan="3" style="background:var(--paper-2);font-weight:600">Layer 1 · Field rules <span style="font-weight:400;color:var(--ink-3)">(settings in <code>validation-rules.json</code>)</span></td></tr>
+          <tr><td>Required fields</td><td>Contract ref, service definition and primary CIF on contracts; contract, CIF and account ID on accounts; user ref, contract and role on users; group ref, contract, name and member on groups.</td><td><span class="pill p-bad">error</span></td></tr>
+          <tr><td>Unique</td><td>The same contract or user appears twice; the same account twice on one contract; the same member twice in a group.</td><td><span class="pill p-bad">error</span></td></tr>
+          <tr><td>Allowed values and formats</td><td>User type is LINKED or VIRTUAL; CIF is 1–40 letters, digits, hyphens or underscores; date of birth is a real <code>yyyy-MM-dd</code> date; group name is 1–100 characters.</td><td><span class="pill p-bad">error</span></td></tr>
+          <tr><td>Contact details</td><td>Email does not look valid; phone is not 5–15 digits; legacy login name has characters the target may refuse.</td><td><span class="pill p-warn">warning</span></td></tr>
+          <tr><td colspan="3" style="background:var(--paper-2);font-weight:600">Layer 2 · Cross-record checks <span style="font-weight:400;color:var(--ink-3)">(codes start with XR_)</span></td></tr>
+          <tr><td><code>XR_ACCOUNT_CONTRACT</code> <code>XR_USER_CONTRACT</code> <code>XR_GROUP_CONTRACT</code></td><td>An account, user or group points at a contract that is not in the batch.</td><td><span class="pill p-bad">error</span></td></tr>
+          <tr><td><code>XR_SERVICE_DEFINITION</code> <code>XR_ROLE</code></td><td>The service definition or role is not in the reference data, so Temenos has no ID for it.</td><td><span class="pill p-bad">error</span></td></tr>
+          <tr><td><code>XR_LEGAL_ENTITY</code></td><td>No legal entity on the row and no default set for the environment.</td><td><span class="pill p-bad">error</span></td></tr>
+          <tr><td><code>XR_CONTRACT_NO_ACCOUNTS</code> <code>XR_PRIMARY_CIF_ACCOUNT</code></td><td>A contract with no accounts, or a primary customer who owns no account on it.</td><td><span class="pill p-bad">error</span></td></tr>
+          <tr><td><code>XR_LINKED_NEEDS_CIF</code> <code>XR_USER_ACCOUNTS</code></td><td>A linked user without their own CIF; a user given accounts that are not on their contract.</td><td><span class="pill p-bad">error</span></td></tr>
+          <tr><td><code>XR_GROUP_CONSISTENT</code> <code>XR_GROUP_MEMBER</code> <code>XR_GROUP_RETAIL</code></td><td>Rows of one group disagree on its name; a member is not a user of that contract; a group on a retail contract.</td><td><span class="pill p-bad">error</span></td></tr>
+          <tr><td><code>XR_JOINT_ACCOUNT</code></td><td>The same account under two or more contracts (a joint account). Left out of all of them and listed, under assumption A-09.</td><td><span class="pill p-warn">warning</span></td></tr>
+          <tr><td colspan="3" style="background:var(--paper-2);font-weight:600">Layer 3 · Temenos's own rules <span style="font-weight:400;color:var(--ink-3)">(codes start with TM_, from the vendor error list)</span></td></tr>
+          <tr><td><code>TM_VIRTUAL_USER_FIELDS</code></td><td>A virtual user is missing a field Temenos marks mandatory (first, middle and last name, email, phone, country code, date of birth, tax ID). Blocked under A-08.</td><td><span class="pill p-bad">error</span></td></tr>
+          <tr><td><code>TM_GROUP_NAME_CHARS</code></td><td>Group name has characters other than letters, digits and spaces (vendor error 21023).</td><td><span class="pill p-bad">error</span></td></tr>
+          <tr><td><code>TM_GROUP_NAME_DUPLICATE</code></td><td>Two groups on one contract share a name (vendor error 21020).</td><td><span class="pill p-bad">error</span></td></tr>
+          <tr><td><code>TM_ONE_GROUP_PER_USER</code></td><td>A user is in two groups on one contract (vendor error 21021).</td><td><span class="pill p-bad">error</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Step 4 · Plan (the dry run)</h3>
+    <div class="prose">
+      <p>For every contract, Ferry works out the exact list of calls Crossing will make, in order, with the exact message each call would send. We call this list a <strong>voyage</strong>.</p>
+      <p>The order follows the dependencies: the contract first, then its users, then the signatory groups made of those users. Later steps need IDs that only exist once an earlier step has run, so the plan holds a placeholder such as <code>{{CONTRACT:B-100.contractId}}</code>. Crossing will fill it in with the real ID Temenos returns.</p>
+    </div>
+    <figure>
+      <div class="dgwrap">
+        <svg class="dg" viewBox="0 0 1000 330" role="img" aria-label="The voyage for contract B-100: the contract first, then three users, then two signatory groups. One user and one group are blocked.">
+          <rect x="20" y="128" width="220" height="74" rx="10" class="acc"/>
+          <text class="t" x="38" y="158">Create contract</text><text class="m" x="38" y="182">CreateContract</text>
+          <path d="M240 165H280V60H326" class="ln" marker-end="url(#arr)"/>
+          <path d="M280 165H326" class="ln" marker-end="url(#arr)"/>
+          <path d="M280 165V270H326" class="ln" marker-end="url(#arr)"/>
+          <rect x="330" y="26" width="270" height="68" rx="10" class="box"/>
+          <text class="t" x="348" y="54">Linked user U-B100-A</text><text class="m" x="348" y="78">LinkUserToContract</text>
+          <rect x="330" y="132" width="270" height="68" rx="10" class="box"/>
+          <text class="t" x="348" y="160">Virtual user U-B100-M</text><text class="m" x="348" y="184">CreateVirtualUser</text>
+          <rect x="330" y="236" width="270" height="78" rx="10" class="bad"/>
+          <text class="t" x="348" y="262">Virtual user U-B100-C</text><text class="m" x="348" y="282">CreateVirtualUser</text><text class="badtxt" x="348" y="302" style="font-size:12px">blocked: no middle name or tax ID</text>
+          <path d="M600 60H650V96H696" class="ln" marker-end="url(#arr)"/>
+          <path d="M600 166H650V114H696" class="ln" marker-end="url(#arr)"/>
+          <path d="M600 275H696" class="ln-bad dash" marker-end="url(#arr-bad)"/>
+          <rect x="700" y="68" width="280" height="74" rx="10" class="box"/>
+          <text class="t" x="718" y="98">Group "Approvers A"</text><text class="m" x="718" y="122">CreateSignatoryGroup</text>
+          <rect x="700" y="236" width="280" height="78" rx="10" class="bad"/>
+          <text class="t" x="718" y="262">Group "Approvers B"</text><text class="m" x="718" y="282">CreateSignatoryGroup</text><text class="badtxt" x="718" y="302" style="font-size:12px">blocked: its only member is blocked</text>
+          <text class="q" x="38" y="224">passes its contractId on</text>
+          <text class="q" x="658" y="144">userIds</text>
+        </svg>
+      </div>
+      <figcaption><b>Figure 8.</b> The voyage for test contract B-100. Arrows show which ID each step waits for. One problem (a virtual user missing details) blocks that user and, in turn, the group that only contains that user. Everything else can still go.</figcaption>
+    </figure>
+
+    <div class="two">
+      <div class="prose">
+        <p>Each voyage ends with one of three statuses:</p>
+        <ul>
+          <li><span class="pill p-ok">ready</span> every step can run, or was already done in an earlier run.</li>
+          <li><span class="pill p-warn">partial</span> the contract can be created, but some users or groups cannot.</li>
+          <li><span class="pill p-bad">blocked</span> the contract itself cannot be created, so nothing under it can either.</li>
+        </ul>
+        <p>Steps also carry the assumption tags they relied on, so a reviewer can see at a glance which parts depend on open questions.</p>
+      </div>
+      <div class="dgwrap" style="padding:8px">
+        <svg class="dg" viewBox="0 0 600 270" role="img" aria-label="Status rule: if the contract cannot be created the voyage is blocked; otherwise if any later step is blocked it is partial; otherwise ready." style="min-width:0">
+          <polygon points="130,20 240,80 130,140 20,80" class="box"/>
+          <text class="c" x="130" y="76" style="fill:var(--ink)">Can the contract</text><text class="c" x="130" y="94" style="fill:var(--ink)">be created?</text>
+          <path d="M240 80H276" class="ln" marker-end="url(#arr)"/><text class="q" x="246" y="70">yes</text>
+          <path d="M130 140V196" class="ln" marker-end="url(#arr)"/><text class="q" x="138" y="172">no</text>
+          <rect x="60" y="200" width="140" height="44" rx="22" class="bad"/><text class="t c badtxt" x="130" y="227">BLOCKED</text>
+          <polygon points="380,20 480,80 380,140 280,80" class="box"/>
+          <text class="c" x="380" y="76" style="fill:var(--ink)">Is any later</text><text class="c" x="380" y="94" style="fill:var(--ink)">step blocked?</text>
+          <path d="M380 140V196" class="ln" marker-end="url(#arr)"/><text class="q" x="388" y="172">yes</text>
+          <rect x="316" y="200" width="128" height="44" rx="22" class="wb"/><text class="t c" x="380" y="227" style="fill:var(--warn)">PARTIAL</text>
+          <path d="M480 80H530V196" class="ln" marker-end="url(#arr)"/><text class="q" x="490" y="70">no</text>
+          <rect x="466" y="200" width="128" height="44" rx="22" class="okb"/><text class="t c oktxt" x="530" y="227">READY</text>
+        </svg>
+      </div>
+    </div>
+
+    <figure class="shot"><img src="img/plan-synthetic.webp" alt="The Plan card for the synthetic batch: 1 contract ready, 3 partly ready, 2 blocked, 19 calls planned, with a table of six contracts." loading="lazy"><figcaption><b>Figure 9.</b> The plan for the six test contracts: totals at the top, filters, and one row per contract with its calls and assumptions.</figcaption></figure>
+    <figure class="shot"><img src="img/plan-timeline.webp" alt="Contract B-100 expanded into a timeline of six calls, two blocked with red reasons." loading="lazy"><figcaption><b>Figure 10.</b> Clicking <b>Calls</b> opens the voyage as a timeline. Blocked steps say why in red. "After …" shows what each step waits for.</figcaption></figure>
+    <figure class="shot"><img src="img/plan-request.webp" alt="The exact CreateContract request body for B-100, with legal entity, service definition ID, CIF list with accounts, primary CIF and communication details." loading="lazy"><figcaption><b>Figure 11.</b> <b>Request</b> shows the exact message that would be sent. Reference names have already been turned into Temenos IDs (BUSINESS became <code>sd-business-example</code>), and the joint account was left out.</figcaption></figure>
+
+    <details class="tech">
+      <summary>How the plan is built <span class="aud tech">Technical</span></summary>
+      <div class="body">
+        <p><code>PlanService</code> builds one voyage per contract from valid records only, and refuses to plan until the batch has been validated. Step IDs are <code>contract</code>, <code>user:&lt;ref&gt;</code> and <code>group:&lt;ref&gt;</code>; each step lists <code>dependsOn</code>, its <code>assumptions</code>, any <code>reasons</code> it is blocked, and its <code>payload</code>.</p>
+        <ul>
+          <li><strong>Contract step</strong> → <code>CreateContract</code>: <code>legalEntityId</code> (row or environment default), <code>serviceDefinitionId</code> (from reference data), <code>primaryCif</code>, and <code>cifList</code> and <code>communicationDetails</code> as JSON <em>strings</em> inside the JSON body, as the vendor guide requires.</li>
+          <li><strong>User steps</strong> → <code>LinkUserToContract</code> for linked users (by CIF) or <code>CreateVirtualUser</code> for virtual users, chosen per record under A-01. The <code>accounts</code> list defaults to every account on the contract.</li>
+          <li><strong>Group steps</strong> → <code>CreateSignatoryGroup</code>, with <code>signatories</code> holding <code>{{USER:&lt;ref&gt;.userId}}</code> placeholders.</li>
+        </ul>
+        <p>Before marking a step planned, the planner looks in the <strong>ID register</strong> for this environment. If the item is there, the step becomes <span class="pill p-ok">already done</span> with the registered target ID, and it will not be sent again. The test <code>aContractAlreadyInTheRegisterIsNotPlannedAgain</code> covers this.</p>
+        <p>Approval mode, approval rules, limits and payees are designed (assumptions A-02 to A-06 already exist for them) and arrive in build steps 5 and 6.</p>
+      </div>
+    </details>
+  </section>
+
+  <!-- 7 -->
+  <section class="ch" id="samples">
+    <div class="ch-head"><div class="ch-num">Chapter 7 <span class="aud">Everyone</span></div><h2>The test data, and what it proves</h2></div>
+    <p class="intro">All test data is invented. No real customer, bank or account appears anywhere. There are three ready-made Excel workbooks in <code>samples/excel</code>, each loaded in one go.</p>
+    <div class="grid">
+      <div class="card"><h4><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg></span>synthetic-batch.xlsx</h4><p>Six contracts, each built to trip specific checks. Proves that every check fires, and that a problem stops only what depends on it.</p><p><span class="pill p-ok">1 ready</span> <span class="pill p-warn">3 partial</span> <span class="pill p-bad">2 blocked</span></p></div>
+      <div class="card"><h4><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/></svg></span>clean-batch.xlsx</h4><p>40 contracts (10 business, 30 retail): 87 accounts, 76 users and 46 group memberships, all valid. Proves the everything-passes path at a realistic size.</p><p><span class="pill p-ok">40 ready</span> <span class="pill p-n">136 calls</span></p></div>
+      <div class="card"><h4><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M4 12h16M4 17h10"/><path d="M18 15l3 3-3 3"/></svg></span>legacycore-batch.xlsx</h4><p>Users in a fictional core system's own columns and codes. Proves a mapping profile can onboard a new source with no code change.</p><p><span class="pill p-ok">3 ready</span> <span class="pill p-n">8 calls</span></p></div>
+    </div>
+    <div class="tbl">
+      <table>
+        <thead><tr><th>Test contract</th><th>What is deliberately wrong</th><th>Result</th></tr></thead>
+        <tbody>
+          <tr><td><code>R-001</code> retail</td><td>A user has a role (SUPERUSER) that is not configured, and a signatory group was given to a retail contract. The contract itself is fine.</td><td><span class="pill p-warn">partial</span></td></tr>
+          <tr><td><code>R-002</code> retail</td><td>No contact details, which is allowed. One of its accounts is also listed under B-100, so that joint account is left out (A-09).</td><td><span class="pill p-ok">ready</span></td></tr>
+          <tr><td><code>B-100</code> business</td><td>Two CIFs. A linked admin, a complete virtual maker, and a virtual checker missing middle name and tax ID (A-08). Group B's only member is that checker.</td><td><span class="pill p-warn">partial</span></td></tr>
+          <tr><td><code>B-200</code> business</td><td>A user marked LINKED has no CIF. Two groups share the name "Beta Signers", and the same user is in both.</td><td><span class="pill p-warn">partial</span></td></tr>
+          <tr><td><code>R-003</code> retail</td><td>The primary customer owns no account on the contract.</td><td><span class="pill p-bad">blocked</span></td></tr>
+          <tr><td><code>R-004</code> retail</td><td>Service definition PREMIUM is not configured.</td><td><span class="pill p-bad">blocked</span></td></tr>
+          <tr><td><code>U-X</code> (a user)</td><td>Points at contract R-009, which is not in the batch.</td><td><span class="pill p-bad">error</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <figure class="shot"><div class="crop"><img src="img/plan-clean.webp" alt="The plan for the clean 40-contract batch: 40 contracts ready, none partly ready or blocked, 136 calls planned, and a list of ready contracts." loading="lazy"></div><figcaption><b>Figure 12.</b> The clean batch: 249 records, no findings, all 40 contracts ready, 136 calls planned. A generator script can rebuild it with any number of contracts for volume tests.</figcaption></figure>
+  </section>
+
+  <!-- 8 -->
+  <section class="ch" id="assumptions">
+    <div class="ch-head"><div class="ch-num">Chapter 8 <span class="aud">Everyone</span></div><h2>Working without all the answers</h2></div>
+    <div class="prose">
+      <p class="intro">Some questions about the Temenos APIs could not be answered yet by Temenos or the bank. Instead of waiting, or guessing silently in the code, Ferry keeps an <strong>assumptions register</strong>.</p>
+      <p>Each open question gets an ID (A-01 to A-12), the evidence from the vendor material, a sensible default, and the alternatives. The choice can be switched in Settings, and every switch is recorded with the person's name. Most importantly, every record and plan step that relied on an assumption is <strong>tagged</strong> with it, so when the answer arrives we know exactly what to re-check.</p>
+    </div>
+    <figure>
+      <div class="dgwrap">
+        <svg class="dg" viewBox="0 0 1000 170" role="img" aria-label="Lifecycle of an assumption: open question, named default, work tagged, answer arrives, confirm or switch and re-check the tagged items.">
+          <rect x="20" y="30" width="170" height="104" rx="10" class="box"/><text class="t c" x="105" y="62">Open question</text><text class="c" x="105" y="86">Temenos or the bank</text><text class="c" x="105" y="104">has not answered</text>
+          <path d="M190 82H218" class="ln" marker-end="url(#arr)"/>
+          <rect x="222" y="30" width="170" height="104" rx="10" class="acc"/><text class="t c" x="307" y="62">Assumption A-xx</text><text class="c" x="307" y="86">a default is chosen</text><text class="c" x="307" y="104">status: assumed</text>
+          <path d="M392 82H420" class="ln" marker-end="url(#arr)"/>
+          <rect x="424" y="30" width="170" height="104" rx="10" class="box"/><text class="t c" x="509" y="62">Work is tagged</text><text class="c" x="509" y="86">every record or step</text><text class="c" x="509" y="104">that relied on it</text>
+          <path d="M594 82H622" class="ln" marker-end="url(#arr)"/>
+          <rect x="626" y="30" width="170" height="104" rx="10" class="box"/><text class="t c" x="711" y="62">Answer arrives</text><text class="c" x="711" y="86">from the vendor</text><text class="c" x="711" y="104">or the bank</text>
+          <path d="M796 82H824" class="ln" marker-end="url(#arr)"/>
+          <rect x="828" y="30" width="152" height="104" rx="10" class="okb"/><text class="t c" x="904" y="62">Confirm or</text><text class="t c" x="904" y="82">switch</text><text class="c" x="904" y="106">re-check tagged</text><text class="c" x="904" y="124">items only</text>
+        </svg>
+      </div>
+      <figcaption><b>Figure 13.</b> How an open question moves from guess to fact without blocking the build.</figcaption>
+    </figure>
+    <div class="tbl">
+      <table>
+        <thead><tr><th>ID</th><th>The question</th><th>What Ferry does today</th><th>Switchable to</th></tr></thead>
+        <tbody>
+          <tr><td><span class="tag">A-01</span></td><td>Can Temenos read a user's details from the core, so a user can be linked by CIF?</td><td>Per record: linked when the source gives the user a CIF, otherwise virtual</td><td>Always virtual</td></tr>
+          <tr><td><span class="tag">A-02</span></td><td>In approval rules, is each group number a yes/no flag or a count of approvals?</td><td>Yes/no flag per group; "two from the same group" rules are parked</td><td>Count per group</td></tr>
+          <tr><td><span class="tag">A-03</span></td><td>Do neighbouring amount brackets share the boundary value?</td><td>Shared boundary, as in the vendor examples</td><td>Next starts at previous + 1</td></tr>
+          <tr><td><span class="tag">A-04</span></td><td>How should an amount range that needs no approval be sent?</td><td>Not sent</td><td>Send as NO_APPROVAL</td></tr>
+          <tr><td><span class="tag">A-05</span></td><td>How do "all transactions" rules become calls?</td><td>One call per action in the list set for the service definition</td><td>—</td></tr>
+          <tr><td><span class="tag">A-06</span></td><td>Rules for actions that move no money?</td><td>Parked for review</td><td>Send with configured limit type</td></tr>
+          <tr><td><span class="tag">A-07</span></td><td>What if a contract name already exists (vendor error 10401)?</td><td>Reported as its own outcome, never retried automatically</td><td>—</td></tr>
+          <tr><td><span class="tag">A-08</span></td><td>A virtual user is missing a field Temenos marks mandatory?</td><td>Block the user until it is filled</td><td>Send blank and flag</td></tr>
+          <tr><td><span class="tag">A-09</span></td><td>An account listed under more than one contract (joint)?</td><td>Leave it out of every contract and list it</td><td>Include in each</td></tr>
+          <tr><td><span class="tag">A-10</span></td><td>What counts as success from Temenos?</td><td><code>opstatus</code> is 0 and there is no error code</td><td>Fields are configurable</td></tr>
+          <tr><td><span class="tag">A-11</span></td><td>How many customers can safely be sent at once?</td><td>4 at a time</td><td>1, 2 or 8</td></tr>
+          <tr><td><span class="tag">A-12</span></td><td>How do we roll back?</td><td>Temenos's DeleteMigratedData, limited to IDs Ferry created</td><td>—</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <figure class="shot"><img src="img/settings-assumptions.webp" alt="Settings, Assumptions tab: 12 open questions tracked, 12 working on an assumption, 0 confirmed, 0 changed, and the register with a choice drop-down for each." loading="lazy"><figcaption><b>Figure 14.</b> The register in Settings. Each row has the question, the evidence (expand it), the choice in force, its status and what it affects.</figcaption></figure>
+  </section>
+
+  <!-- 9 -->
+  <section class="ch" id="safety">
+    <div class="ch-head"><div class="ch-num">Chapter 9 <span class="aud">Everyone</span></div><h2>Safety by design</h2></div>
+    <p class="intro">A migration tool can do real damage if it sends the wrong thing to the wrong place. Ferry is built so that the safe action is the default one.</p>
+    <div class="locks">
+      <div class="lock"><span class="k"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg></span><h4>Live calls are off</h4><p>Each environment has a "live calls" switch, off by default. While it is off, nothing is sent. The top bar always says <strong>Safe mode</strong> or, in red, <strong>Live calls on</strong>.</p></div>
+      <div class="lock"><span class="k"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg></span><h4>Every run is confirmed</h4><p>Even with live calls on, a run must be explicitly confirmed, against an environment that is always shown on screen.</p></div>
+      <div class="lock"><span class="k"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="7.5" cy="15.5" r="5.5"/><path d="M21 2l-9.6 9.6M15.5 7.5l3 3L22 7l-3-3"/></svg></span><h4>Secrets are never stored</h4><p>The Temenos app key and secret are typed in at run time and never written to disk or logs. Settings files hold no secrets.</p></div>
+      <div class="lock"><span class="k"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></span><h4>Customer data stays local</h4><p>Loaded files and results live in a local database folder that is excluded from Git, so customer data cannot be committed by accident.</p></div>
+      <div class="lock"><span class="k"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 109-9 9.7 9.7 0 00-6.7 2.7L3 8"/><path d="M3 3v5h5"/></svg></span><h4>Undo only what we made</h4><p>Rollback will always preview first, and can only remove items found in Ferry's own ID register, never anything else in the target.</p></div>
+      <div class="lock"><span class="k"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8"/></svg></span><h4>Everything is on record</h4><p>Every run, setting change and assumption switch is recorded with who did it and when, in Settings → History.</p></div>
+    </div>
+    <h3>The "200 OK" trap</h3>
+    <div class="prose"><p>Web services usually signal failure with an error status. The Temenos DataMigration services often do not: they can answer "200 OK" with a failure described inside the message. A naive tool would count that as a success. Ferry judges success only when <code>opstatus</code> is 0 <em>and</em> there is no error code (assumption A-10).</p></div>
+    <div class="verdict">
+      <div><span class="lbl"><span class="pill p-ok">counted as success</span></span>
+<pre>HTTP 200 OK
+{ <span class="k">"opstatus"</span>: 0,
+  <span class="k">"contractId"</span>: <span class="s">"1234567890"</span> }</pre></div>
+      <div><span class="lbl"><span class="pill p-bad">counted as failure</span></span>
+<pre>HTTP 200 OK
+{ <span class="k">"opstatus"</span>: 0,
+  <span class="k">"dbpErrCode"</span>: <span class="s">"10401"</span>,
+  <span class="k">"dbpErrMsg"</span>: <span class="s">"Contract name already exists"</span> }</pre></div>
+    </div>
+    <p style="font-size:14px;color:var(--ink-3)">Example messages for illustration. The rule itself (which fields mean success or failure) lives in <code>target-temenos.json</code>.</p>
+    <figure class="shot"><img src="img/settings-environment.webp" alt="Settings, Environment tab: Local mock target, safe mode, API host, default legal entity LE0001, live calls off, and the config and data folders." loading="lazy"><figcaption><b>Figure 15.</b> Settings → Environment shows exactly where the console points, and that live calls are off.</figcaption></figure>
+  </section>
+
+  <!-- 10 -->
+  <section class="ch" id="console">
+    <div class="ch-head"><div class="ch-num">Chapter 10 <span class="aud">Everyone</span></div><h2>The console: looks and room to grow</h2></div>
+    <div class="prose">
+      <p class="intro">The console is the web page you use to drive Ferry. It follows the Avenza look: black navigation, orange highlights, clean type, in light or dark.</p>
+      <ul>
+        <li><strong>Left:</strong> the stages, grouped (Migration, Setup). Stages not built yet show their build step, e.g. "Step 3".</li>
+        <li><strong>Top:</strong> where you are, the environment and its safety state, the light/dark/system switch, and your name (recorded on every change).</li>
+        <li><strong>Phones and tablets:</strong> the navigation folds into a menu; nothing scrolls sideways.</li>
+      </ul>
+      <p>It is also built to <strong>grow</strong>. Each stage is a self-contained module. Adding Crossing, Manifest or anything new (a rule converter, a reconciliation view) means adding one folder; the navigation, links and page frame appear automatically.</p>
+    </div>
+    <figure class="shot"><img src="img/boarding-light.webp" alt="The Boarding screen in light mode with the clean batch selected." loading="lazy"><figcaption><b>Figure 16.</b> Light theme, with the 40-contract clean batch.</figcaption></figure>
+    <div class="two">
+      <figure class="shot"><img src="img/collapsed-dark.webp" alt="Dark theme with the sidebar collapsed to icons." loading="lazy"><figcaption><b>Figure 17.</b> Dark theme, navigation collapsed to icons for more room.</figcaption></figure>
+      <figure class="shot"><img src="img/crossing-planned.webp" alt="The Crossing page marked Planned, Step 3, describing target sign-in, running the reviewed plan, judging every response and registering every ID." loading="lazy"><figcaption><b>Figure 18.</b> A stage that is not built yet explains what it will do.</figcaption></figure>
+    </div>
+    <div class="phones">
+      <figure class="shot"><img src="img/phone.webp" alt="The Boarding screen at phone width." loading="lazy"><figcaption><b>Figure 19.</b> At phone width.</figcaption></figure>
+      <figure class="shot"><img src="img/phone-menu.webp" alt="The navigation menu open on a phone." loading="lazy"><figcaption><b>Figure 20.</b> The menu on a phone.</figcaption></figure>
+    </div>
+    <figure class="shot"><img src="img/settings-history.webp" alt="Settings, History tab, listing recent runs and the audit trail of changes." loading="lazy"><figcaption><b>Figure 21.</b> Settings → History: every run and every change, with who and when.</figcaption></figure>
+  </section>
+
+  <!-- 11 -->
+  <section class="ch" id="inside">
+    <div class="ch-head"><div class="ch-num">Chapter 11 <span class="aud tech">Technical</span></div><h2>Under the hood</h2></div>
+    <p class="intro">Non-technical readers can skip to <a href="#try">Try it yourself</a>. This chapter is for whoever will maintain or extend Ferry.</p>
+    <figure>
+      <div class="dgwrap">
+        <svg class="dg" viewBox="0 0 1000 440" role="img" aria-label="Architecture: the React console talks to the Spring Boot server over a REST API; the server reads JSON settings, stores everything in a local H2 database, and will call Temenos through a target adapter.">
+          <rect x="300" y="16" width="400" height="76" rx="10" class="acc"/>
+          <text class="t c" x="500" y="46">Ferry console · React + Vite · port 5196</text>
+          <text class="c" x="500" y="70">modules: Boarding, Settings, and planned stages</text>
+          <path d="M500 92V132" class="ln" marker-start="url(#arr)" marker-end="url(#arr)"/>
+          <text class="q" x="512" y="118">REST API under /api, JSON</text>
+          <rect x="30" y="136" width="940" height="164" rx="12" class="soft"/>
+          <text class="t" x="50" y="164">Ferry server · Java 17 + Spring Boot 3 · port 8095</text>
+          <rect x="50" y="178" width="210" height="104" rx="8" class="box"/><text class="t" x="66" y="204">Boarding</text><text x="66" y="226">read files, map,</text><text x="66" y="244">validate, plan</text><text class="q m" x="66" y="266">boarding/*</text>
+          <rect x="280" y="178" width="210" height="104" rx="8" class="box"/><text class="t" x="296" y="204">Platform</text><text x="296" y="226">status, config reload,</text><text x="296" y="244">runs and audit</text><text class="q m" x="296" y="266">platform/ store/</text>
+          <rect x="510" y="178" width="210" height="104" rx="8" class="box"/><text class="t" x="526" y="204">Config and register</text><text x="526" y="226">strict settings, ID</text><text x="526" y="244">register, assumptions</text><text class="q m" x="526" y="266">config/ register/</text>
+          <rect x="740" y="178" width="210" height="104" rx="8" class="box"/><text class="t" x="756" y="204">Target adapter</text><text x="756" y="226">Temenos rules and</text><text x="756" y="244">payload shapes</text><text class="q m" x="756" y="266">target/temenos/</text>
+          <path d="M165 300V346" class="ln" marker-start="url(#arr)" marker-end="url(#arr)"/>
+          <path d="M500 300V346" class="ln" marker-start="url(#arr)" marker-end="url(#arr)"/>
+          <path d="M845 300V346" class="ln dash" marker-end="url(#arr)"/>
+          <rect x="30" y="350" width="270" height="74" rx="10" class="box"/><text class="t" x="48" y="378">config/ folder</text><text x="48" y="400">JSON settings, no secrets</text>
+          <rect x="330" y="350" width="340" height="74" rx="10" class="box"/><text class="t" x="348" y="378">Local database (H2, file)</text><text x="348" y="400">batches, records, findings, plans, register</text>
+          <rect x="700" y="350" width="270" height="74" rx="10" class="box" style="stroke-dasharray:6 6"/><text class="t" x="718" y="378">Temenos Digital</text><text x="718" y="400">DataMigration APIs (Crossing)</text>
+        </svg>
+      </div>
+      <figcaption><b>Figure 22.</b> Two programs: a server that does the work and a console that drives it. The dashed link to Temenos is not built yet.</figcaption>
+    </figure>
+
+    <details class="tech" open>
+      <summary>Technology and size <span class="aud tech">Technical</span></summary>
+      <div class="body">
+        <div class="tbl"><table>
+          <tbody>
+            <tr><td><strong>Server</strong></td><td>Java 17, Spring Boot 3.3.2, Apache POI 5.2.5 (Excel), Commons CSV 1.11.0. About 2,600 lines across the packages <code>core</code>, <code>config</code>, <code>store</code>, <code>register</code>, <code>platform</code>, <code>boarding</code> and <code>target</code>.</td></tr>
+            <tr><td><strong>Database</strong></td><td>Embedded H2 in MySQL mode, stored as a file in <code>ferry-server/data</code> (git-ignored). Can be switched to MySQL or PostgreSQL later.</td></tr>
+            <tr><td><strong>Console</strong></td><td>React 18 + Vite 5, about 1,800 lines. No UI library: a small in-house component kit, an inline SVG icon set, and design tokens in CSS.</td></tr>
+            <tr><td><strong>Tests</strong></td><td>15 automated tests, all passing, including the full sample batch producing the documented voyages.</td></tr>
+          </tbody>
+        </table></div>
+      </div>
+    </details>
+
+    <details class="tech">
+      <summary>Repository layout <span class="aud tech">Technical</span></summary>
+      <div class="body">
+<pre>Data_Migration_Ferry/
+├── docs/            DESIGN.md (the approved design), CONSOLE.md (adding modules)
+├── ferry-server/    Spring Boot server: schema.sql, canonical-model.json, Java packages
+├── ferry-console/   React console: src/kit (components), src/modules (one folder per stage)
+├── config/          environments, reference data, assumptions, validation rules,
+│                    Temenos target rules, mapping-profiles/
+└── samples/         synthetic CSVs, legacy-core example, excel/ workbooks + generator</pre>
+      </div>
+    </details>
+
+    <details class="tech">
+      <summary>Settings files: everything bank-specific lives here <span class="aud tech">Technical</span></summary>
+      <div class="body">
+        <div class="tbl"><table>
+          <thead><tr><th>File</th><th>Holds</th></tr></thead>
+          <tbody>
+            <tr><td><code>environments.json</code></td><td>Target environments: addresses, default legal entity, the live-calls switch, and the <em>names</em> of the environment variables holding the app key and secret (never the values). Today: <code>local-mock</code> (active) and an <code>example-uat</code> template.</td></tr>
+            <tr><td><code>reference-data.json</code></td><td>Service definitions and roles: source reference → Temenos ID. Neutral examples today; replaced with the bank's real IDs per project.</td></tr>
+            <tr><td><code>mapping-profiles/*.json</code></td><td>One file per source system and record type.</td></tr>
+            <tr><td><code>validation-rules.json</code></td><td>Field-level checks: required, allowed, regex, unique (optionally within a scope), length, date.</td></tr>
+            <tr><td><code>assumptions.json</code></td><td>The register: question, evidence, options, default, current choice, status, what it affects.</td></tr>
+            <tr><td><code>target-temenos.json</code></td><td>API paths for 15 DataMigration operations, the success rule, the mandatory virtual-user fields, the group-name pattern and the vendor error catalogue.</td></tr>
+          </tbody>
+        </table></div>
+        <p>Settings are read <strong>strictly</strong>: an unknown or misspelt key is refused at start-up rather than silently ignored. Keys starting with <code>_</code> are notes and are kept. Settings can be reloaded from the console without a restart.</p>
+      </div>
+    </details>
+
+    <details class="tech">
+      <summary>Data store: eight tables <span class="aud tech">Technical</span></summary>
+      <div class="body">
+        <div class="tbl"><table>
+          <thead><tr><th>Table</th><th>Holds</th></tr></thead>
+          <tbody>
+            <tr><td><code>ferry_batch</code></td><td>Each batch: name, source system, stage (staged, validated, planned), who and when.</td></tr>
+            <tr><td><code>ferry_file</code></td><td>Each file loaded: type, sheet, profile, row count, who.</td></tr>
+            <tr><td><code>ferry_record</code></td><td>Each mapped record in the standard format, with its status (valid, invalid, excluded) and the assumptions it relied on.</td></tr>
+            <tr><td><code>ferry_finding</code></td><td>Each finding: check, severity, field, message, row, assumption.</td></tr>
+            <tr><td><code>ferry_plan</code></td><td>Each voyage and its steps with exact payloads.</td></tr>
+            <tr><td><code>id_register</code></td><td>Source ID → target ID per environment. Refuses a second, different target ID for the same item.</td></tr>
+            <tr><td><code>ferry_run</code></td><td>Every validation, plan (and later, crossing) run with counts and outcome.</td></tr>
+            <tr><td><code>audit_event</code></td><td>Every change: who, what, when.</td></tr>
+          </tbody>
+        </table></div>
+      </div>
+    </details>
+
+    <details class="tech">
+      <summary>The server's API <span class="aud tech">Technical</span></summary>
+      <div class="body">
+        <div class="tbl"><table>
+          <thead><tr><th>Area</th><th>Calls</th></tr></thead>
+          <tbody>
+            <tr><td>Platform</td><td><code>GET /api/platform/status</code> · <code>/environments</code> · <code>/runs</code> · <code>/audit</code> · <code>POST /api/platform/config/reload</code></td></tr>
+            <tr><td>Assumptions</td><td><code>GET /api/assumptions</code> · <code>PUT /api/assumptions/{id}</code> · <code>GET /api/assumptions/{id}/records</code></td></tr>
+            <tr><td>Reference and register</td><td><code>GET /api/reference-data</code> · <code>/register</code> · <code>/register/counts</code></td></tr>
+            <tr><td>Boarding</td><td><code>GET /api/boarding/model</code> · <code>/profiles</code> · <code>/templates/workbook.xlsx</code> · <code>/templates/{type}.xlsx</code> · <code>POST /mapping/preview</code></td></tr>
+            <tr><td>Batches</td><td><code>GET|POST /api/boarding/batches</code> · <code>GET /batches/{id}</code> · <code>POST /batches/{id}/files</code> · <code>/validate</code> · <code>/plan</code> · <code>GET /batches/{id}/records</code> · <code>/findings</code> · <code>/plan</code></td></tr>
+          </tbody>
+        </table></div>
+      </div>
+    </details>
+
+    <details class="tech">
+      <summary>Adding a feature to the console <span class="aud tech">Technical</span></summary>
+      <div class="body">
+        <p>Each stage is a folder under <code>ferry-console/src/modules</code> with an <code>index.jsx</code> manifest. A registry finds every folder at build time and generates the navigation, the <code>#/module/tab</code> links, the breadcrumbs and a per-module error guard. <code>docs/CONSOLE.md</code> walks through an example.</p>
+<pre>export default {
+  id: <span class="s">"recon"</span>, group: <span class="s">"operations"</span>, order: 30,
+  label: <span class="s">"Reconciliation"</span>, icon: <span class="s">"checkCircle"</span>, status: <span class="s">"live"</span>,
+  tabs: [{ id: <span class="s">"summary"</span>, label: <span class="s">"Summary"</span> }],
+  Component: ReconPage,   <span class="c">// receives { module, sub, go, onConfigChanged }</span>
+};</pre>
+      </div>
+    </details>
+
+    <details class="tech">
+      <summary>What the 15 tests prove <span class="aud tech">Technical</span></summary>
+      <div class="body">
+        <ul>
+          <li>The sample batch produces exactly the documented voyages (R-001 partial … R-004 blocked).</li>
+          <li>A contract already in the ID register is not planned again.</li>
+          <li>Loading files again sends a batch back to "staged", and planning is refused until it is re-validated.</li>
+          <li>The template workbook loads in one go; a legacy export maps through its profile.</li>
+          <li>Template headers match without a profile; unknown columns and missing required columns are named.</li>
+          <li>Profile columns, transforms, value maps and defaults apply in the right order.</li>
+          <li>CSV keeps leading zeros and drops the byte-order mark; workbooks keep text cells and skip instruction sheets.</li>
+          <li>Unknown settings keys are refused; note keys are kept; an unknown assumption option is refused.</li>
+          <li>The status call shows the target and that live calls are off.</li>
+          <li>The ID register skips duplicates and refuses a second target ID for the same item.</li>
+        </ul>
+      </div>
+    </details>
+  </section>
+
+  <!-- 12 -->
+  <section class="ch" id="try">
+    <div class="ch-head"><div class="ch-num">Chapter 12 <span class="aud">Everyone</span></div><h2>Try it yourself</h2></div>
+    <div class="prose">
+      <p class="intro">Ferry runs on one laptop. It needs Java 17, Maven and Node.js installed. Then it is two commands and a browser.</p>
+    </div>
+    <div class="two">
+      <div class="prose">
+        <h4>1 · Start the server</h4>
+<pre>mvn -f ferry-server/pom.xml spring-boot:run</pre>
+        <h4>2 · Start the console (second window)</h4>
+<pre>npm --prefix ferry-console install   <span class="c"># first time only</span>
+npm --prefix ferry-console run dev</pre>
+        <h4>3 · Open the console</h4>
+        <p>Go to <code>http://localhost:5196</code> and type your name in the top-right box.</p>
+      </div>
+      <div class="prose">
+        <h4>A five-minute walkthrough</h4>
+        <ol>
+          <li>In <strong>Boarding</strong>, click <em>Switch or create</em>, name a batch, leave the source system blank, and create it.</li>
+          <li>Under <strong>Load files</strong>, choose <code>samples/excel/synthetic-batch.xlsx</code> and click <em>Load into batch</em>.</li>
+          <li>Click <strong>Validate</strong>. Read the findings by check, then every finding.</li>
+          <li>Click <strong>Build plan</strong>. Open <em>Calls</em> on B-100 and then <em>Request</em> on a step.</li>
+          <li>Repeat with <code>clean-batch.xlsx</code> (everything ready) and with <code>legacycore-batch.xlsx</code> in a batch whose source system is <code>LEGACYCORE</code>.</li>
+          <li>Look through <strong>Settings</strong>: environment, assumptions, reference data, history.</li>
+        </ol>
+      </div>
+    </div>
+    <div class="note"><b>Nothing you do here reaches Temenos.</b> Live calls are off and the sending stage is not built yet. Changing an assumption does update <code>config/assumptions.json</code>, so change it back afterwards, or note the change.</div>
+  </section>
+
+  <!-- 13 -->
+  <section class="ch" id="next">
+    <div class="ch-head"><div class="ch-num">Chapter 13 <span class="aud">Everyone</span></div><h2>What comes next</h2></div>
+    <p class="intro">Eight build steps were agreed in the design. Two are done. The next one, Crossing, is where Ferry starts talking to Temenos.</p>
+    <div class="road">
+      <div class="card done"><div class="top"><span class="num">1</span><span class="pill p-ok">done</span></div><h4>Skeleton</h4><p>Settings, run log, audit, ID register, console frame.</p></div>
+      <div class="card done"><div class="top"><span class="num">2</span><span class="pill p-ok">done</span></div><h4>Boarding</h4><p>Templates, reading, mapping, three layers of checks, dry-run plan.</p></div>
+      <div class="card next"><div class="top"><span class="num">3</span><span class="pill p-acc">next</span></div><h4>Crossing: contracts and users</h4><p>Sign-in, running the plan, judging responses, recording IDs, safe retries.</p></div>
+      <div class="card"><div class="top"><span class="num">4</span><span class="pill p-n">planned</span></div><h4>Manifest</h4><p>Results per item and step, Excel export, Temenos reconciliation and exception log.</p></div>
+      <div class="card"><div class="top"><span class="num">5</span><span class="pill p-n">planned</span></div><h4>Corporate setup</h4><p>Approval mode and rules, plus a converter for legacy maker/checker rules.</p></div>
+      <div class="card"><div class="top"><span class="num">6</span><span class="pill p-n">planned</span></div><h4>Limits and payees</h4><p>Contract and user limits; same-bank, domestic, international, P2P and bill-pay payees.</p></div>
+      <div class="card"><div class="top"><span class="num">7</span><span class="pill p-n">planned</span></div><h4>Return Crossing</h4><p>Preview, then remove selected customers through the vendor delete service.</p></div>
+      <div class="card"><div class="top"><span class="num">8</span><span class="pill p-n">proposed earlier</span></div><h4>Mock target</h4><p>A local stand-in for Temenos. Proposed to build alongside Crossing.</p></div>
+    </div>
+
+    <h3>How Crossing will work</h3>
+    <figure>
+      <div class="dgwrap">
+        <svg class="dg" viewBox="0 0 1000 330" role="img" aria-label="Crossing: sign in, run contracts four at a time, send each next step, judge the response; on success record the ID and continue, on failure keep the vendor error and retry only timeouts.">
+          <rect x="20" y="30" width="210" height="88" rx="10" class="box"/><text class="t" x="38" y="60">Sign in</text><text x="38" y="82">key and secret typed in,</text><text x="38" y="100">token renewed in time</text>
+          <path d="M230 74H262" class="ln" marker-end="url(#arr)"/>
+          <rect x="266" y="30" width="210" height="88" rx="10" class="box"/><text class="t" x="284" y="60">Pick contracts</text><text x="284" y="82">4 at a time (A-11),</text><text x="284" y="100">only ready steps</text>
+          <path d="M476 74H508" class="ln" marker-end="url(#arr)"/>
+          <rect x="512" y="30" width="210" height="88" rx="10" class="acc"/><text class="t" x="530" y="60">Send the next step</text><text x="530" y="82">IDs filled in from</text><text x="530" y="100">earlier steps</text>
+          <path d="M722 74H754" class="ln" marker-end="url(#arr)"/>
+          <rect x="758" y="30" width="222" height="88" rx="10" class="box"/><text class="t" x="776" y="60">Judge the response</text><text x="776" y="82">opstatus 0 and</text><text x="776" y="100">no error code (A-10)</text>
+          <path d="M800 118V146H660V176" class="ln" marker-end="url(#arr)"/>
+          <path d="M900 118V176" class="ln" marker-end="url(#arr)"/>
+          <rect x="512" y="180" width="232" height="92" rx="10" class="okb"/><text class="t oktxt" x="530" y="208">Success</text><text x="530" y="230">save the new ID in the</text><text x="530" y="248">register; go to next step</text>
+          <path d="M560 180V122" class="ln-acc" marker-end="url(#arr-acc)"/><text class="q" x="470" y="154">next step</text>
+          <rect x="764" y="180" width="216" height="92" rx="10" class="bad"/><text class="t badtxt" x="782" y="208">Failure</text><text x="782" y="230">keep the vendor error;</text><text x="782" y="248">retry timeouts only</text>
+          <path d="M512 226H480" class="ln" marker-end="url(#arr)"/><rect x="20" y="180" width="456" height="92" rx="10" class="soft"/><text class="t" x="38" y="210">Everything goes to the Manifest</text><text x="38" y="234">per-step results, vendor codes and messages,</text><text x="38" y="252">and the ID register for safe reruns</text>
+          <text class="q" x="20" y="306">Data errors are never retried automatically. A rerun skips anything already in the register.</text>
+        </svg>
+      </div>
+      <figcaption><b>Figure 23.</b> The design for Crossing, step 3. It runs the exact plan Boarding produced, nothing more.</figcaption>
+    </figure>
+
+    <h3>What we need from others</h3>
+    <div class="grid">
+      <div class="card"><h4>From Temenos</h4><p>Answers to the open questions on the <a href="https://claude.ai/artifact/7F9WP5UFUP195irVnVVjMm">call sheet</a>. Each answer confirms or switches an assumption.</p></div>
+      <div class="card"><h4>From the bank</h4><p>A UAT environment address and legal entity, the real service definition and role IDs, an app key and secret (typed in at run time), and source data extracts.</p></div>
+      <div class="card"><h4>From the project</h4><p>Feedback on Boarding, a go-ahead for Crossing with the mock target, and later a decision on hosting beyond one laptop and user sign-in.</p></div>
+    </div>
+  </section>
+
+  <!-- 14 -->
+  <section class="ch" id="faq">
+    <div class="ch-head"><div class="ch-num">Chapter 14 <span class="aud">Everyone</span></div><h2>Questions people ask</h2></div>
+    <div class="faq">
+      <details><summary>Does Ferry send anything to Temenos today?</summary><div><p>No. Today it only prepares: it loads, checks and plans. The sending stage, Crossing, is the next build step. Even then, every environment starts with live calls switched off.</p></div></details>
+      <details><summary>Is it only for one bank?</summary><div><p>No. There is nothing bank-specific in the code. Each bank's values (environment addresses, service definitions, roles, source formats) go into settings files.</p></div></details>
+      <details><summary>What if Temenos answers a question differently from our assumption?</summary><div><p>We switch that assumption in Settings. Every record and step that relied on it is tagged, so we know exactly which ones to re-check or re-plan. Nothing else is affected.</p></div></details>
+      <details><summary>What happens if a run stops half-way?</summary><div><p>Every created item is recorded in the ID register as soon as Temenos confirms it. A rerun skips those and continues with the rest, so nothing is created twice.</p></div></details>
+      <details><summary>Can we undo a migration?</summary><div><p>That is Return Crossing, build step 7. It will use Temenos's own delete service, always preview first, and only touch items Ferry itself created.</p></div></details>
+      <details><summary>Where is customer data kept?</summary><div><p>On the machine running Ferry, in a local database folder that is excluded from Git. All files in the repository are invented test data.</p></div></details>
+      <details><summary>Why do some of my numbers look different in Excel?</summary><div><p>Excel may hide leading zeros when displaying numbers. Ferry reads cells as text, exactly as shown. Format CIF and account columns as Text before typing, as the template's instructions say.</p></div></details>
+      <details><summary>Who can use it?</summary><div><p>Today it runs on one laptop for one person at a time. Hosting for a team, with sign-in, is listed as a decision still to make.</p></div></details>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>Data Migration Ferry · plain-language guide · v0.1 · 29 October 2026</span>
+    <span>All customer data shown is invented test data.</span>
+  </div>
+</footer>
+
+</body>
+</html>

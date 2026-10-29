@@ -12,6 +12,8 @@ A standalone, one-stop tool that carries customer data from **any source system*
 
 The full design is in [docs/DESIGN.md](docs/DESIGN.md). How the console is built, and how to add a
 feature to it, is in [docs/CONSOLE.md](docs/CONSOLE.md).
+A plain-language, illustrated guide for technical and non-technical readers is in
+[docs/guide/ferry-guide.html](docs/guide/ferry-guide.html) (open it in a browser).
 
 ## Run it
 
