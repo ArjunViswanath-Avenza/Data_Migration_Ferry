@@ -197,6 +197,59 @@ class BoardingFlowTest {
         assertEquals("95", mya.get("phoneCountryCode").asText());
     }
 
+    @Test
+    void theFullBankTemplateCarriesEveryKindOfData() throws Exception {
+        byte[] template = mvc.perform(get("/api/boarding/templates/workbook.xlsx")).andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsByteArray();
+        byte[] filled;
+        try (Workbook wb = WorkbookFactory.create(new ByteArrayInputStream(template)); ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+            assertEquals("Readme", wb.getSheetAt(0).getSheetName());
+            assertEquals("Instructions", wb.getSheetAt(1).getSheetName());
+            fill(wb.getSheet("Contracts"), "B-9", "BUSINESS", "090000009");
+            fill(wb.getSheet("Accounts"), "B-9", "090000009", "09000000000901");
+            fill(wb.getSheet("Users"), "U-9", "B-9", "ADMIN", "", "090000009");
+            fill(wb.getSheet("Contract Limits"), "B-9", "090000009", "F1", "A1", "DAILY", "1000.50");
+            fill(wb.getSheet("User Limits"), "U-9", "B-9", "090000009", "09000000000901", "F1", "A1", "G1", "DAILY", "400");
+            fill(wb.getSheet("Approval Rules"), "R1", "B-9", "", "", "*", "", "1000", "3000", "U-9", "", "2", "N");
+            fill(wb.getSheet("Approval Checkers"), "B-9", "R1", "1", "SENIOR", "Y");
+            fill(wb.getSheet("Approval Group Members"), "B-9", "SENIOR", "CHECKER", "U-9");
+            fill(wb.getSheet("Payees"), "P1", "B-9", "U-9", "DOMESTIC", "XYZ", "", "0987", "IB1", "SW1", "Bank");
+            wb.write(out);
+            filled = out.toByteArray();
+        }
+        String batch = newBatch(null);
+        JsonNode res = call(multipart("/api/boarding/batches/" + batch + "/files")
+                .file(new MockMultipartFile("file", "full.xlsx", "application/octet-stream", filled)).param("performedBy", "test"));
+        Set<String> types = new TreeSet<>();
+        res.get("staged").forEach(s -> types.add(s.get("recordType").asText()));
+        assertEquals(Set.of("CONTRACT", "ACCOUNT", "USER", "CONTRACT_LIMIT", "USER_LIMIT", "SRC_RULE", "SRC_RULE_CHECKER", "SRC_GROUP_MEMBER", "PAYEE"), types);
+        assertEquals("[\"Signatory Groups\"]", res.get("sheetsIgnored").toString(), "the optional empty sheet is reported; Readme and Instructions are not");
+        JsonNode summary = call(post("/api/boarding/batches/" + batch + "/validate").contentType(MediaType.APPLICATION_JSON).content("{}"));
+        assertEquals(0, summary.get("invalid").asInt());
+        JsonNode plan = call(post("/api/boarding/batches/" + batch + "/plan").contentType(MediaType.APPLICATION_JSON).content("{}"));
+        assertEquals("READY", plan.get("voyages").get(0).get("status").asText());
+    }
+
+    @Test
+    void newSheetsAreChecked() throws Exception {
+        byte[] template = mvc.perform(get("/api/boarding/templates/workbook.xlsx")).andReturn().getResponse().getContentAsByteArray();
+        byte[] filled;
+        try (Workbook wb = WorkbookFactory.create(new ByteArrayInputStream(template)); ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+            fill(wb.getSheet("Contract Limits"), "B-9", "090000009", "F1", "A1", "DAILY", "1,000");
+            fill(wb.getSheet("Payees"), "P1", "B-9", "U-9", "BILLPAY", "XYZ");
+            wb.write(out);
+            filled = out.toByteArray();
+        }
+        String batch = newBatch(null);
+        call(multipart("/api/boarding/batches/" + batch + "/files")
+                .file(new MockMultipartFile("file", "bad.xlsx", "application/octet-stream", filled)).param("performedBy", "test"));
+        JsonNode summary = call(post("/api/boarding/batches/" + batch + "/validate").contentType(MediaType.APPLICATION_JSON).content("{}"));
+        assertEquals(2, summary.get("invalid").asInt());
+        Set<String> rules = new TreeSet<>();
+        summary.get("findingSummary").forEach(f -> rules.add(f.get("rule_id").asText()));
+        assertTrue(rules.containsAll(Set.of("CONTRACT_LIMIT_VALUE", "PAYEE_BILLPAY_FIELDS")), rules.toString());
+    }
+
     private static void fill(Sheet s, String... values) {
         var row = s.createRow(1);
         for (int i = 0; i < values.length; i++) if (!values[i].isEmpty()) row.createCell(i).setCellValue(values[i]);

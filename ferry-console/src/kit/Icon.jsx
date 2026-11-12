@@ -39,6 +39,13 @@ const P = {
   lock: <><rect x="4" y="11" width="16" height="10" rx="2" /><path d="M8 11V7a4 4 0 0 1 8 0v4" /></>,
   code: <path d="m8 7-5 5 5 5M16 7l5 5-5 5" />,
   clock: <><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></>,
+  drydock: <><path d="M3 9.5h18l-2.6 5.5H5.6Z" /><path d="M12 3.5v6" /><path d="m12 3.5 4.5 2.2L12 8" /><path d="M7.5 15v3.5M12 15v3.5M16.5 15v3.5" /><path d="M2.5 21h19" /></>,
+  userMinus: <><circle cx="9" cy="8" r="4" /><path d="M2 21a7 7 0 0 1 14 0" /><path d="M16 11h6" /></>,
+  compare: <><rect x="3" y="4" width="7" height="16" rx="1.5" /><rect x="14" y="4" width="7" height="16" rx="1.5" /><path d="M10 9h4M10 15h4" /></>,
+  copy: <><rect x="8" y="8" width="13" height="13" rx="2" /><path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3" /></>,
+  search: <><circle cx="11" cy="11" r="7" /><path d="m20 20-4-4" /></>,
+  arrowRight: <path d="M5 12h14M13 6l6 6-6 6" />,
+  table: <><rect x="3" y="4" width="18" height="16" rx="2" /><path d="M3 10h18M9 10v10" /></>,
 };
 
 export default function Icon({ name, size = 18, strokeWidth = 1.75, ...rest }) {

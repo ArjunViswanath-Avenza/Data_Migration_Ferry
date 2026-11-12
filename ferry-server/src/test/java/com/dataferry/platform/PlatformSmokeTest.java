@@ -27,7 +27,7 @@ class PlatformSmokeTest {
                 .andExpect(jsonPath("$.application").value("Data Migration Ferry"))
                 .andExpect(jsonPath("$.environment.id").value("local-mock"))
                 .andExpect(jsonPath("$.environment.liveCalls").value(false))
-                .andExpect(jsonPath("$.assumptions.total").value(12));
+                .andExpect(jsonPath("$.assumptions.total").value(14));
     }
 
     @Test

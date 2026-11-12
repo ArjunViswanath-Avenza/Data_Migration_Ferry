@@ -30,6 +30,10 @@ public class CanonicalModel {
         public List<String> keyFields = new ArrayList<>();
         public String contractField;
         public String description;
+        /** Which of the bank's systems usually holds this data (shown on the template). */
+        public String source;
+        /** When the bank has to fill this sheet (shown on the template). */
+        public String needed;
         public List<Field> fields = new ArrayList<>();
     }
 
@@ -37,6 +41,10 @@ public class CanonicalModel {
         public String name;
         public String label;
         public boolean required;
+        /** Plain-language condition when a field is only sometimes needed; checks live in validation-rules.json. */
+        public String requiredWhen;
+        /** A realistic value, shown on the template's Instructions sheet. */
+        public String example;
         /** date: yyyy-MM-dd after mapping */
         public String format;
         public List<String> allowed;

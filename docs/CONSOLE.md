@@ -24,6 +24,8 @@ ferry-console/src/
     ├── crossing/         planned (step 3)
     ├── manifest/         planned (step 4)
     ├── return-crossing/  planned (step 7)
+    ├── drydock/          live (Tools: schema compare and refit)
+    ├── disembark/        live (Tools: un-enrol one customer)
     └── settings/         live
 ```
 
@@ -41,7 +43,7 @@ time. The sidebar entry, route, breadcrumb and error boundary all come from its 
    export default {
      id: "recon",                 // URL segment: #/recon
      order: 30,                   // position within its group
-     group: "operations",         // migration · operations · setup (GROUPS in registry.js)
+     group: "operations",         // migration · operations · tools · setup (GROUPS in registry.js)
      label: "Reconciliation",
      description: "Vendor report vs register",   // one line under the label
      icon: "checkCircle",         // any name in kit/Icon.jsx

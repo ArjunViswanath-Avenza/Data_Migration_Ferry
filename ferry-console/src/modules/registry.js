@@ -24,6 +24,7 @@ const found = import.meta.glob("./*/index.jsx", { eager: true });
 export const GROUPS = [
   { id: "migration", label: "Migration" },
   { id: "operations", label: "Operations" },
+  { id: "tools", label: "Tools" },
   { id: "setup", label: "Setup" },
 ];
 

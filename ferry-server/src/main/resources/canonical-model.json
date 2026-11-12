@@ -1,28 +1,30 @@
 {
-  "_comment": "The canonical model every source system maps onto. It is product-level (the shape of a Temenos Digital migration), not bank-specific: banks adapt through mapping profiles in config/mapping-profiles. Order of record types = order of sheets in the template workbook.",
-  "version": "1",
+  "_comment": "The standard data format every source system delivers or maps onto. It is product-level (the shape of a Temenos Digital migration), not bank-specific: banks adapt through mapping profiles in config/mapping-profiles. The bank data template is generated from this file. Order of record types = order of sheets in the template workbook. Text here is read by bank teams, so keep it in plain language.",
+  "version": "2",
   "recordTypes": {
     "CONTRACT": {
       "label": "Contracts",
       "sheet": "Contracts",
       "keyFields": ["contractRef"],
       "contractField": "contractRef",
-      "description": "One row per contract. A contract is what customers sign in under; it holds one or more CIFs and their accounts.",
+      "description": "One row per customer agreement for online banking. It holds one or more customer numbers (CIFs) and their accounts.",
+      "source": "Core banking and the current online banking system",
+      "needed": "Always",
       "fields": [
-        { "name": "contractRef", "label": "Contract Ref", "required": true, "note": "Your identifier for the contract; often the primary CIF. Used to link accounts, users and groups." },
-        { "name": "serviceDefinitionRef", "label": "Service Definition", "required": true, "note": "A ref from reference-data.json, e.g. RETAIL or BUSINESS." },
-        { "name": "primaryCif", "label": "Primary CIF", "required": true, "note": "Format the column as Text so leading zeros survive." },
-        { "name": "legalEntityRef", "label": "Legal Entity", "note": "Blank uses the environment's default legal entity." },
-        { "name": "email", "label": "Email", "note": "Contract communication. Blank lets the target use the primary CIF's details." },
-        { "name": "phoneCountryCode", "label": "Phone Country Code" },
-        { "name": "phoneNumber", "label": "Phone Number" },
-        { "name": "addressLine1", "label": "Address Line 1" },
-        { "name": "addressLine2", "label": "Address Line 2" },
-        { "name": "city", "label": "City" },
-        { "name": "state", "label": "State" },
-        { "name": "country", "label": "Country" },
-        { "name": "zipCode", "label": "Zip Code" },
-        { "name": "faxId", "label": "Fax" }
+        { "name": "contractRef", "label": "Contract Ref", "required": true, "example": "B-1001", "note": "Your unique identifier for this customer agreement; often the primary CIF. It links accounts, users, groups and rules to the contract." },
+        { "name": "serviceDefinitionRef", "label": "Service Definition", "required": true, "example": "BUSINESS", "note": "The customer's package, for example RETAIL or BUSINESS. Use the values agreed with the migration team." },
+        { "name": "primaryCif", "label": "Primary CIF", "required": true, "example": "045000100", "note": "The main customer number on the contract. Keep leading zeros." },
+        { "name": "legalEntityRef", "label": "Legal Entity", "example": "LE0001", "note": "Leave blank if the bank has one legal entity." },
+        { "name": "email", "label": "Email", "example": "finance@company.example", "note": "Contract contact. If blank, the primary customer's details are used." },
+        { "name": "phoneCountryCode", "label": "Phone Country Code", "example": "44", "note": "Digits only, no plus sign." },
+        { "name": "phoneNumber", "label": "Phone Number", "example": "2071234567", "note": "Digits only." },
+        { "name": "addressLine1", "label": "Address Line 1", "example": "1 Dock Street" },
+        { "name": "addressLine2", "label": "Address Line 2", "example": "Floor 2" },
+        { "name": "city", "label": "City", "example": "London" },
+        { "name": "state", "label": "State", "example": "Greater London" },
+        { "name": "country", "label": "Country", "example": "GB" },
+        { "name": "zipCode", "label": "Zip Code", "example": "EC1A 1BB" },
+        { "name": "faxId", "label": "Fax", "example": "2071234568" }
       ]
     },
     "ACCOUNT": {
@@ -30,15 +32,17 @@
       "sheet": "Accounts",
       "keyFields": ["contractRef", "accountId"],
       "contractField": "contractRef",
-      "description": "One row per account on a contract. Each account sits under the CIF that owns it; every CIF on a contract needs at least one account.",
+      "description": "One row per account on a contract. Every customer number on a contract needs at least one account.",
+      "source": "Core banking",
+      "needed": "Always",
       "fields": [
-        { "name": "contractRef", "label": "Contract Ref", "required": true },
-        { "name": "cif", "label": "CIF", "required": true, "note": "The CIF that owns the account. Format the column as Text." },
-        { "name": "accountId", "label": "Account ID", "required": true, "note": "Format the column as Text so leading zeros survive." },
-        { "name": "accountName", "label": "Account Name" },
-        { "name": "accountType", "label": "Account Type" },
-        { "name": "currency", "label": "Currency" },
-        { "name": "status", "label": "Account Status" }
+        { "name": "contractRef", "label": "Contract Ref", "required": true, "example": "B-1001", "note": "Must match a row on the Contracts sheet." },
+        { "name": "cif", "label": "CIF", "required": true, "example": "045000100", "note": "The customer number that owns the account. Keep leading zeros." },
+        { "name": "accountId", "label": "Account ID", "required": true, "example": "04510000010001", "note": "Keep leading zeros. List a joint account under each contract that has it; it will be reported for a decision." },
+        { "name": "accountName", "label": "Account Name", "example": "Operating account" },
+        { "name": "accountType", "label": "Account Type", "example": "C", "note": "Your own code; send the list of codes with the file." },
+        { "name": "currency", "label": "Currency", "example": "USD", "note": "ISO currency code." },
+        { "name": "status", "label": "Account Status", "example": "Open", "note": "Your own status value." }
       ]
     },
     "USER": {
@@ -46,23 +50,25 @@
       "sheet": "Users",
       "keyFields": ["userRef"],
       "contractField": "contractRef",
-      "description": "One row per person who signs in to a contract. A user with their own CIF is linked; a user without one (staff of a business customer) is created as a virtual user.",
+      "description": "One row per person who signs in to a contract. A user with their own customer number is LINKED. Anyone else, such as a company's staff, is VIRTUAL and needs all personal details.",
+      "source": "Current online banking system; core banking for customer numbers",
+      "needed": "Always",
       "fields": [
-        { "name": "userRef", "label": "User Ref", "required": true, "note": "Your identifier for the user, e.g. the legacy login ID." },
-        { "name": "contractRef", "label": "Contract Ref", "required": true },
-        { "name": "roleRef", "label": "Role", "required": true, "note": "A ref from reference-data.json, e.g. ADMIN." },
-        { "name": "userType", "label": "User Type", "allowed": ["LINKED", "VIRTUAL"], "note": "Blank lets the tool decide (assumption A-01): LINKED when a CIF is given, otherwise VIRTUAL." },
-        { "name": "cif", "label": "User CIF", "note": "The user's own CIF, for linked users." },
-        { "name": "legacyUserName", "label": "Legacy User Name", "note": "Keeps the user's existing login name in the target." },
-        { "name": "firstName", "label": "First Name" },
-        { "name": "middleName", "label": "Middle Name" },
-        { "name": "lastName", "label": "Last Name" },
-        { "name": "email", "label": "Email" },
-        { "name": "phoneCountryCode", "label": "Phone Country Code" },
-        { "name": "phone", "label": "Phone" },
-        { "name": "dateOfBirth", "label": "Date of Birth", "format": "date", "note": "yyyy-MM-dd, or set a date transform in the mapping profile." },
-        { "name": "taxId", "label": "Tax ID", "note": "National ID or tax number." },
-        { "name": "accountIds", "label": "Account IDs", "note": "Comma-separated. Blank gives the user every account on the contract." }
+        { "name": "userRef", "label": "User Ref", "required": true, "example": "acme.maker", "note": "Your unique identifier for the user, usually the login ID." },
+        { "name": "contractRef", "label": "Contract Ref", "required": true, "example": "B-1001", "note": "Must match a row on the Contracts sheet." },
+        { "name": "roleRef", "label": "Role", "required": true, "example": "ACCOUNTANT", "note": "Use the role values agreed with the migration team." },
+        { "name": "userType", "label": "User Type", "allowed": ["LINKED", "VIRTUAL"], "example": "VIRTUAL", "note": "If blank: LINKED when User CIF is given, otherwise VIRTUAL." },
+        { "name": "cif", "label": "User CIF", "requiredWhen": "Linked users", "example": "045000100", "note": "The user's own customer number. Keep leading zeros." },
+        { "name": "legacyUserName", "label": "Legacy User Name", "example": "acme.maker", "note": "The user's current login name, kept after migration." },
+        { "name": "firstName", "label": "First Name", "requiredWhen": "Virtual users", "example": "Maya" },
+        { "name": "middleName", "label": "Middle Name", "requiredWhen": "Virtual users", "example": "Rose" },
+        { "name": "lastName", "label": "Last Name", "requiredWhen": "Virtual users", "example": "Hart" },
+        { "name": "email", "label": "Email", "requiredWhen": "Virtual users", "example": "maya@company.example" },
+        { "name": "phoneCountryCode", "label": "Phone Country Code", "requiredWhen": "Virtual users", "example": "44", "note": "Digits only, no plus sign." },
+        { "name": "phone", "label": "Phone", "requiredWhen": "Virtual users", "example": "7700900123", "note": "Digits only." },
+        { "name": "dateOfBirth", "label": "Date of Birth", "requiredWhen": "Virtual users", "format": "date", "example": "1990-04-12", "note": "Written as yyyy-MM-dd." },
+        { "name": "taxId", "label": "Tax ID", "requiredWhen": "Virtual users", "example": "AB1234567", "note": "National ID or tax number." },
+        { "name": "accountIds", "label": "Account IDs", "example": "04510000010001,04510000010002", "note": "The accounts this user can access, separated by commas. Blank means every account on the contract." }
       ]
     },
     "SIGNATORY_GROUP": {
@@ -70,13 +76,141 @@
       "sheet": "Signatory Groups",
       "keyFields": ["groupRef", "userRef"],
       "contractField": "contractRef",
-      "description": "Business contracts only. One row per member of a group. A user can belong to only one group on a contract.",
+      "description": "Fill this only if the bank has already designed its new approval groups. Otherwise leave it empty and fill the three Approval sheets; the groups are then worked out from them. One row per group member.",
+      "source": "Bank's approval design",
+      "needed": "Optional",
       "fields": [
-        { "name": "groupRef", "label": "Group Ref", "required": true },
-        { "name": "contractRef", "label": "Contract Ref", "required": true },
-        { "name": "groupName", "label": "Group Name", "required": true, "note": "Letters, digits and spaces only." },
-        { "name": "description", "label": "Description" },
-        { "name": "userRef", "label": "Member User Ref", "required": true }
+        { "name": "groupRef", "label": "Group Ref", "required": true, "example": "G-ACME-A", "note": "Your identifier for the group." },
+        { "name": "contractRef", "label": "Contract Ref", "required": true, "example": "B-1001", "note": "Must be a business contract on the Contracts sheet." },
+        { "name": "groupName", "label": "Group Name", "required": true, "example": "Senior Approvers", "note": "Letters, digits and spaces only. Unique within a contract." },
+        { "name": "description", "label": "Description", "example": "Approves larger payments" },
+        { "name": "userRef", "label": "Member User Ref", "required": true, "example": "acme.admin", "note": "Must match a row on the Users sheet. A user can be in only one group on a contract." }
+      ]
+    },
+    "CONTRACT_LIMIT": {
+      "label": "Contract Limits",
+      "sheet": "Contract Limits",
+      "keyFields": ["contractRef", "cif", "actionRef", "limitTypeRef"],
+      "contractField": "contractRef",
+      "description": "One row per limit on a contract: one customer number, one action, one limit type.",
+      "source": "Current online banking system",
+      "needed": "If limits are being migrated",
+      "fields": [
+        { "name": "contractRef", "label": "Contract Ref", "required": true, "example": "B-1001", "note": "Must match a row on the Contracts sheet." },
+        { "name": "cif", "label": "CIF", "required": true, "example": "045000100", "note": "A customer number on the contract. Keep leading zeros." },
+        { "name": "featureRef", "label": "Feature", "required": true, "example": "ACH_PAYMENT", "note": "Your own code; send the list of codes with the file." },
+        { "name": "actionRef", "label": "Action", "required": true, "example": "ACH_PAYMENT_CREATE", "note": "Your own code for the transaction type; send the list of codes with the file." },
+        { "name": "limitTypeRef", "label": "Limit Type", "required": true, "example": "DAILY_LIMIT", "note": "For example per transaction, daily or weekly." },
+        { "name": "value", "label": "Limit Value", "required": true, "example": "1000.00", "note": "Numbers only, no thousands separators or currency symbol." }
+      ]
+    },
+    "USER_LIMIT": {
+      "label": "User Limits",
+      "sheet": "User Limits",
+      "keyFields": ["userRef", "accountId", "actionRef", "limitTypeRef"],
+      "contractField": "contractRef",
+      "description": "One row per limit for a user on an account: one action, one limit type.",
+      "source": "Current online banking system",
+      "needed": "If limits are being migrated",
+      "fields": [
+        { "name": "userRef", "label": "User Ref", "required": true, "example": "acme.maker", "note": "Must match a row on the Users sheet." },
+        { "name": "contractRef", "label": "Contract Ref", "required": true, "example": "B-1001", "note": "Must match a row on the Contracts sheet." },
+        { "name": "cif", "label": "CIF", "required": true, "example": "045000100", "note": "The customer number that owns the account. Keep leading zeros." },
+        { "name": "accountId", "label": "Account ID", "required": true, "example": "04510000010001", "note": "Keep leading zeros." },
+        { "name": "featureRef", "label": "Feature", "required": true, "example": "BULK_PAYMENT_REQUEST", "note": "Your own code; send the list of codes with the file." },
+        { "name": "actionRef", "label": "Action", "required": true, "example": "BULK_PAYMENT_SINGLE_SUBMIT", "note": "Your own code; send the list of codes with the file." },
+        { "name": "limitGroupRef", "label": "Limit Group", "required": true, "example": "BULK_PAYMENT", "note": "Your own code; send the list of codes with the file." },
+        { "name": "limitTypeRef", "label": "Limit Type", "required": true, "example": "PRE_APPROVED_DAILY_LIMIT", "note": "Your own code; send the list of codes with the file." },
+        { "name": "value", "label": "Limit Value", "required": true, "example": "400.00", "note": "Numbers only, no thousands separators or currency symbol." }
+      ]
+    },
+    "SRC_RULE": {
+      "label": "Approval Rules",
+      "sheet": "Approval Rules",
+      "keyFields": ["contractRef", "ruleRef"],
+      "contractField": "contractRef",
+      "description": "Business customers. Your current approval rules exactly as they are today, one row per rule, including users who approve their own transactions. Don't simplify or merge them.",
+      "source": "Current online banking system",
+      "needed": "If customers have approval rules",
+      "fields": [
+        { "name": "ruleRef", "label": "Rule Ref", "required": true, "example": "518178", "note": "Your rule ID, unique within a contract." },
+        { "name": "contractRef", "label": "Contract Ref", "required": true, "example": "B-1001", "note": "Must match a row on the Contracts sheet." },
+        { "name": "cif", "label": "Transaction CIF", "example": "045000100", "note": "If the rule applies to one customer number only. Keep leading zeros." },
+        { "name": "accountId", "label": "Account ID", "example": "04510000010001", "note": "If the rule applies to one account only. Keep leading zeros." },
+        { "name": "txnType", "label": "Transaction Type", "required": true, "example": "*", "note": "Your own code. Use * for a rule covering all transaction types. Send the list of codes with the file." },
+        { "name": "currency", "label": "Currency", "example": "USD", "note": "If the rule applies to one currency only." },
+        { "name": "fromAmount", "label": "From Amount", "required": true, "example": "1000", "note": "Numbers only. Use 0 for both amounts if the rule has no amount, such as a statement request." },
+        { "name": "toAmount", "label": "To Amount", "required": true, "example": "3000", "note": "Numbers only. Use your system's own value for 'no upper limit', and tell us what it is." },
+        { "name": "makerRef", "label": "Maker User Ref", "example": "acme.maker", "note": "The user this rule applies to. Fill this or Maker Group Ref if your rules name a maker." },
+        { "name": "makerGroupRef", "label": "Maker Group Ref", "example": "MAKERS", "note": "The group of makers this rule applies to; list them on Approval Group Members." },
+        { "name": "requiredApprovals", "label": "Required Approvals", "required": true, "example": "2", "note": "How many approvals the rule needs. Use 0 for a self-approving user." },
+        { "name": "selfApprove", "label": "Self Approve", "required": true, "allowed": ["Y", "N"], "example": "N", "note": "Y if the maker's own transaction is approved automatically." },
+        { "name": "sequential", "label": "Sequential", "allowed": ["Y", "N"], "example": "N", "note": "Y if approvals must happen in a fixed order. Blank means N." }
+      ]
+    },
+    "SRC_RULE_CHECKER": {
+      "label": "Approval Checkers",
+      "sheet": "Approval Checkers",
+      "keyFields": ["contractRef", "ruleRef", "position"],
+      "contractField": "contractRef",
+      "description": "Who can approve under each rule on Approval Rules. One row per checker slot on a rule. A self-approving rule with no checkers has no rows here.",
+      "source": "Current online banking system",
+      "needed": "If customers have approval rules",
+      "fields": [
+        { "name": "contractRef", "label": "Contract Ref", "required": true, "example": "B-1001", "note": "Must match a row on the Contracts sheet." },
+        { "name": "ruleRef", "label": "Rule Ref", "required": true, "example": "518178", "note": "Must match a row on Approval Rules." },
+        { "name": "position", "label": "Position", "required": true, "example": "1", "note": "1 for the first checker slot on the rule, 2 for the second, and so on." },
+        { "name": "checkerRef", "label": "Checker Ref", "required": true, "example": "SENIOR", "note": "A user ref, or a group ref if Is Group is Y." },
+        { "name": "isGroup", "label": "Is Group", "required": true, "allowed": ["Y", "N"], "example": "Y", "note": "Y if Checker Ref is a group; list its members on Approval Group Members." }
+      ]
+    },
+    "SRC_GROUP_MEMBER": {
+      "label": "Approval Group Members",
+      "sheet": "Approval Group Members",
+      "keyFields": ["contractRef", "groupRef", "userRef"],
+      "contractField": "contractRef",
+      "description": "Who belongs to each group named on Approval Rules or Approval Checkers. One row per member.",
+      "source": "Current online banking system",
+      "needed": "If approval rules use groups",
+      "fields": [
+        { "name": "contractRef", "label": "Contract Ref", "required": true, "example": "B-1001", "note": "Must match a row on the Contracts sheet." },
+        { "name": "groupRef", "label": "Group Ref", "required": true, "example": "SENIOR", "note": "The group as named in your rules." },
+        { "name": "groupKind", "label": "Group Kind", "allowed": ["MAKER", "CHECKER"], "example": "CHECKER", "note": "Whether this is a group of makers or of checkers." },
+        { "name": "userRef", "label": "Member User Ref", "required": true, "example": "acme.admin", "note": "Must match a row on the Users sheet." }
+      ]
+    },
+    "PAYEE": {
+      "label": "Payees",
+      "sheet": "Payees",
+      "keyFields": ["payeeRef"],
+      "contractField": "contractRef",
+      "description": "One row per saved payee or beneficiary of a user. Payee Type decides which columns are needed.",
+      "source": "Current online banking system",
+      "needed": "If payees are being migrated",
+      "fields": [
+        { "name": "payeeRef", "label": "Payee Ref", "required": true, "example": "P-5001", "note": "Your unique identifier for this payee." },
+        { "name": "contractRef", "label": "Contract Ref", "required": true, "example": "B-1001", "note": "Must match a row on the Contracts sheet." },
+        { "name": "userRef", "label": "Owner User Ref", "required": true, "example": "acme.maker", "note": "The user who owns this payee. Must match a row on the Users sheet." },
+        { "name": "payeeType", "label": "Payee Type", "required": true, "allowed": ["SAMEBANK", "DOMESTIC", "INTERNATIONAL", "P2P", "BILLPAY"], "example": "DOMESTIC", "note": "SAMEBANK, DOMESTIC or INTERNATIONAL for bank accounts; P2P for person-to-person; BILLPAY for bill payments." },
+        { "name": "payeeName", "label": "Payee Name", "required": true, "example": "XYZ Consulting", "note": "The beneficiary's or person's name." },
+        { "name": "nickName", "label": "Nick Name", "requiredWhen": "P2P and BILLPAY", "example": "XYZ" },
+        { "name": "accountId", "label": "Account Number", "requiredWhen": "SAMEBANK, DOMESTIC, INTERNATIONAL and BILLPAY", "example": "987987", "note": "The payee's account, or the bill account for BILLPAY. Keep leading zeros." },
+        { "name": "iban", "label": "IBAN", "requiredWhen": "Expected for SAMEBANK, DOMESTIC and INTERNATIONAL", "example": "GB29NWBK60161331926819" },
+        { "name": "swiftCode", "label": "SWIFT Code", "requiredWhen": "Expected for SAMEBANK, DOMESTIC and INTERNATIONAL", "example": "NWBKGB2L" },
+        { "name": "bankName", "label": "Bank Name", "requiredWhen": "Expected for SAMEBANK, DOMESTIC and INTERNATIONAL", "example": "Example Bank" },
+        { "name": "addressLine1", "label": "Address Line 1", "example": "44 Market Street" },
+        { "name": "addressLine2", "label": "Address Line 2", "example": "Suite 5" },
+        { "name": "city", "label": "City", "example": "London" },
+        { "name": "state", "label": "State", "example": "Greater London" },
+        { "name": "zipCode", "label": "Zip Code", "example": "EC1A 1BB" },
+        { "name": "country", "label": "Country", "example": "GB" },
+        { "name": "email", "label": "Email", "example": "pay@xyz.example" },
+        { "name": "phone", "label": "Phone", "example": "2071234569", "note": "Digits only." },
+        { "name": "nationalId", "label": "National ID", "example": "AB1234567", "note": "P2P only." },
+        { "name": "primaryContact", "label": "Primary Contact", "example": "2071234569", "note": "P2P only: the phone or email used to send money. Can be blank if both are blank." },
+        { "name": "companyName", "label": "Company Name", "requiredWhen": "BILLPAY", "example": "City Utilities" },
+        { "name": "nameOnBill", "label": "Name On Bill", "requiredWhen": "BILLPAY", "example": "John Kelly" },
+        { "name": "notes", "label": "Notes", "example": "Monthly electricity", "note": "BILLPAY only." }
       ]
     }
   }

@@ -6,8 +6,9 @@ spring:
     name: data-migration-ferry
   servlet:
     multipart:
-      max-file-size: 200MB
-      max-request-size: 200MB
+      # Dry Dock reads whole database dumps (it skips the data rows); Boarding keeps its own 200 MB cap.
+      max-file-size: 4GB
+      max-request-size: 8GB
   # The embedded run store and ID register are built in core/DataSourceConfig from ferry.data-dir
   # (a git-ignored folder, because it can hold customer data).
   sql:

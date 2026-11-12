@@ -43,6 +43,9 @@ The unit of work is a **contract** (one "voyage"), because every later call depe
 
 Legacy maker/checker rules can be loaded as-is and converted into approval rules by a
 **rule converter** module (bracket normalisation, user vs group mode, safe consolidation).
+Its design is in [APPROVAL_RULES.md](APPROVAL_RULES.md).
+
+Banks hand over all of this data in one standard format: see [DATA_TEMPLATE.md](DATA_TEMPLATE.md).
 
 ## 4. How a run works
 
@@ -74,9 +77,9 @@ Changing one lists every record that relied on it, so those can be re-checked or
 | ID | Question | Default | Switch to |
 |---|---|---|---|
 | A-01 | Can the target read customers from the source core? | Per record: linked user if the source gives the user a CIF, else virtual user | Always virtual |
-| A-02 | `groupRule` format | 1/0 flag per group (vendor worked example); "N from the same group" parked | Count per group |
-| A-03 | Amount bracket boundaries | Neighbouring brackets share the boundary value (vendor examples) | Next lower = previous upper + 1 |
-| A-04 | Ranges that need no approval | Not sent | Send `NO_APPROVAL` |
+| A-02 | `groupRule` format | 1/0 flag per group; "N from the same group" parked (counts look likely) | Count per group |
+| A-03 | Amount bracket boundaries | Neighbouring brackets share the boundary value (vendor examples, Manage Approvals) | Next lower = previous upper + 1 |
+| A-04 | Ranges that need no approval | Sent explicitly with `numberOfApprovals` 0 | Not sent |
 | A-05 | "All transactions" rules | Expanded to the action list configured per service definition | — |
 | A-06 | Rules for actions that move no money | Parked for review | Send with configured limit type |
 | A-07 | Contract-name clash (vendor error 10401) | Own outcome, no automatic retry | — |
@@ -85,6 +88,8 @@ Changing one lists every record that relied on it, so those can be re-checked or
 | A-10 | What counts as success | `opstatus` 0 and no `dbpErrCode` | Configurable fields |
 | A-11 | Safe parallelism | 4 contracts at a time | Any number |
 | A-12 | Rollback | Vendor `DeleteMigratedData` | — |
+| A-13 | Self-approval setting | One bank-wide setting made outside the migration; self-approving users sent as approvers | — |
+| A-14 | Default approval mode | Mode call only for group-level customers; user level is the default | — |
 
 Status per assumption: **Assumed** (our default), **Confirmed** (vendor or bank answered), **Overridden**.
 
@@ -119,7 +124,8 @@ Data_Migration_Ferry/
 2. **Boarding.** Templates, file reading (identifiers kept as text), mapping, validation, dry-run plan.
 3. **Crossing for contracts and users.** Token handling, step graph, execution, success judging, retries.
 4. **Manifest.** Results, Excel export, vendor reconciliation and exception log.
-5. **Corporate setup.** Signatory groups, approval mode, approval rules, rule converter.
+5. **Corporate setup.** Signatory groups, approval mode, approval rules, rule converter
+   ([APPROVAL_RULES.md](APPROVAL_RULES.md), sub-steps 5a–5e).
 6. **Limits and payees.**
 7. **Return Crossing.** Preview and vendor delete, limited to registered IDs.
 8. **Mock target.** A local stand-in for the vendor APIs so every flow can be tested without a real environment.

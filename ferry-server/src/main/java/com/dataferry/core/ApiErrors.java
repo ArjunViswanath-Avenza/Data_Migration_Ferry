@@ -34,7 +34,7 @@ public class ApiErrors {
 
     @ExceptionHandler(MaxUploadSizeExceededException.class)
     public ResponseEntity<Map<String, Object>> tooLarge(MaxUploadSizeExceededException e) {
-        return body(HttpStatus.PAYLOAD_TOO_LARGE, "The file is larger than the 200 MB upload limit. Split it and upload the parts.");
+        return body(HttpStatus.PAYLOAD_TOO_LARGE, "The file is larger than the upload limit (4 GB). For Dry Dock, export the schema only (mysqldump --no-data --routines --triggers).");
     }
 
     @ExceptionHandler(Exception.class)

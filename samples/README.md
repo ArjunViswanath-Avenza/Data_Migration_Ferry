@@ -2,6 +2,12 @@
 
 Invented data only. No real customer, bank or account appears here.
 
+The template to share with a bank, with its own filled example, is in [`../templates/`](../templates/).
+
+`drydock/` holds two schema files for Dry Dock (Tools → Dry Dock → Try the sample files): a customised older
+release written as a mysqldump with data, and a new release written as a base script plus an upgrade script.
+See [`../docs/DRY_DOCK.md`](../docs/DRY_DOCK.md).
+
 ## `excel/`: ready-made workbooks
 
 Each workbook holds a whole batch, so it loads in one upload ("What the file holds: Whole workbook").

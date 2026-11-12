@@ -56,6 +56,7 @@ public class BoardingService {
     public UploadResult upload(String batchId, MultipartFile file, String recordType, String profileId, String by) throws Exception {
         Map<String, Object> batch = store.batch(batchId);
         if (file == null || file.isEmpty()) throw new IllegalArgumentException("No file was uploaded.");
+        checkSize(file);
         String sourceSystem = (String) batch.get("source_system");
         String fileName = file.getOriginalFilename();
         String runId = runs.start("boarding", "UPLOAD", batchId, by);
@@ -102,6 +103,7 @@ public class BoardingService {
 
     /** Maps a file without staging it, to check a profile against real headers. */
     public Staged preview(MultipartFile file, String recordType, String profileId, String sourceSystem) throws Exception {
+        checkSize(file);
         String type = recordType.toUpperCase(Locale.ROOT);
         Optional<MappingProfile> profile = mapping.resolveProfile(profileId, type, sourceSystem);
         SheetReader.Sheet sheet = pick(reader.readAll(file.getBytes(), file.getOriginalFilename()), type, profile.orElse(null), true);
@@ -148,5 +150,11 @@ public class BoardingService {
     public void requireBatch(String batchId) {
         Ids.requireKey(batchId, "batch id");
         store.batch(batchId);
+    }
+
+    /** Sheets are read into memory, so Boarding keeps a 200 MB cap even though the server accepts larger uploads. */
+    private static void checkSize(MultipartFile file) {
+        if (file != null && file.getSize() > 200L * 1024 * 1024)
+            throw new IllegalArgumentException("Boarding files can be up to 200 MB. Split the file and upload the parts.");
     }
 }

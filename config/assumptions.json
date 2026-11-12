@@ -20,7 +20,7 @@
       "id": "A-02",
       "title": "groupRule format",
       "question": "Is each number in a groupRule row a 1/0 flag for the group, or the number of approvals needed from it?",
-      "evidence": "Vendor API reference shows groupRule \"[[0],[2]]\" for 2 groups; the vendor's worked SME example shows \"[[0,1,0,0],[1,0,0,0]]\" for 4 groups.",
+      "evidence": "Vendor API reference shows groupRule \"[[0],[2]]\" for 2 groups; the vendor's worked SME example shows \"[[0,1,0,0],[1,0,0,0]]\" and explains \"[[1,2,1,3],[1,3,2,1]]\" as counts. Vendor Manage Approvals page: each condition is a number of approvals from a group, and a group can't be reused within one AND condition. Counts look likely; the API format is still to be confirmed.",
       "defaultChoice": "FLAGS",
       "choice": "FLAGS",
       "options": [
@@ -34,7 +34,7 @@
       "id": "A-03",
       "title": "Amount bracket boundaries",
       "question": "Do neighbouring amount brackets share the boundary value, or does the next bracket start at the previous upper limit + 1?",
-      "evidence": "Vendor guide example: -1.00 to 5, then 5 to -1.00. Vendor Postman sample: -1.00 to 10, then 10 to -1.00.",
+      "evidence": "Vendor guide example: -1.00 to 5, then 5 to -1.00. Vendor Postman sample: -1.00 to 10, then 10 to -1.00. Vendor Manage Approvals page: a range is above the lower value, up to and including the upper value, each range starts from the previous range's end, and there are no gaps. That page describes the app; confirm the DataMigration API behaves the same.",
       "defaultChoice": "SHARED_BOUNDARY",
       "choice": "SHARED_BOUNDARY",
       "options": [
@@ -48,12 +48,12 @@
       "id": "A-04",
       "title": "Ranges that need no approval",
       "question": "How should an amount range that needs no approval be sent?",
-      "evidence": "Vendor Postman sends approvalruleId NO_APPROVAL with empty approvers and isGroupMatrix; its saved response is error 87115. The vendor guide does not document either field.",
-      "defaultChoice": "OMIT",
-      "choice": "OMIT",
+      "evidence": "Vendor Manage Approvals page: no-approval ranges are explicit ranges with Approval Required off, and ranges must cover the whole amount range with no gaps. Vendor guide: numberOfApprovals 0 = NO_APPROVAL. Vendor Postman's sample with approvalruleId NO_APPROVAL and isGroupMatrix returned error 87115, and neither field is documented. The exact format, especially in group mode, is still to be confirmed.",
+      "defaultChoice": "NO_APPROVAL",
+      "choice": "NO_APPROVAL",
       "options": [
-        { "value": "OMIT", "label": "Do not send the range" },
-        { "value": "NO_APPROVAL", "label": "Send it with approvalruleId NO_APPROVAL" }
+        { "value": "NO_APPROVAL", "label": "Send the range explicitly as needing no approval (numberOfApprovals 0, no approvers)" },
+        { "value": "OMIT", "label": "Do not send the range" }
       ],
       "affects": ["Plan: approval rules (build step 5)"],
       "status": "ASSUMED"
@@ -62,11 +62,11 @@
       "id": "A-05",
       "title": "Rules for all transaction types",
       "question": "How many CreateApprovalMatrixRule calls does a source rule that covers all transaction types become?",
-      "evidence": "Vendor API needs one actionId and one limitTypeId per call; a vendor Postman note gives approvalActionsPerCif = 78 for one service definition.",
+      "evidence": "Vendor API needs one actionId and one limitTypeId per call; a vendor Postman note gives approvalActionsPerCif = 78 for one service definition. Vendor Manage Approvals page: rules are set per feature action and per limit type (per transaction, daily, weekly). Whether all three limit types are required is not stated.",
       "defaultChoice": "EXPAND_PER_SERVICE_DEFINITION",
       "choice": "EXPAND_PER_SERVICE_DEFINITION",
       "options": [
-        { "value": "EXPAND_PER_SERVICE_DEFINITION", "label": "One call per action in the list configured for the contract's service definition" }
+        { "value": "EXPAND_PER_SERVICE_DEFINITION", "label": "One call per action in the list configured for the contract's service definition, for the limit types the source rule defines (per transaction if it doesn't say)" }
       ],
       "affects": ["Plan: approval rules (build step 5)"],
       "status": "ASSUMED"
@@ -75,7 +75,7 @@
       "id": "A-06",
       "title": "Rules for actions that move no money",
       "question": "Which limitTypeId and limits should be sent for actions that move no money, such as statement requests?",
-      "evidence": "Vendor API marks limitTypeId and limits as mandatory; every vendor sample uses MAX_TRANSACTION_LIMIT with amounts.",
+      "evidence": "Vendor API marks limitTypeId and limits as mandatory; every vendor sample uses MAX_TRANSACTION_LIMIT with amounts. Vendor Manage Approvals page: non-monetary actions do have rules, but ranges don't apply to them. Which limitTypeId the API expects is not stated.",
       "defaultChoice": "PARK",
       "choice": "PARK",
       "options": [
@@ -166,6 +166,32 @@
         { "value": "VENDOR_DELETE", "label": "Use DeleteMigratedData, limited to IDs in the ID register" }
       ],
       "affects": ["Return Crossing (build step 7)"],
+      "status": "ASSUMED"
+    },
+    {
+      "id": "A-13",
+      "title": "Self-approval setting",
+      "question": "Is self-approval one bank-wide setting, or can it be set per customer or user, and can the migration APIs set it?",
+      "evidence": "Vendor Manage Approvals page: isSelfApprovalEnabled is a field 'in the application table'; when true, the initiator's own signature counts if they are a valid approver. In a Temenos Digital database schema that table has no customer or user column. The DataMigration guide and Postman never mention self-approval.",
+      "defaultChoice": "BANK_WIDE",
+      "choice": "BANK_WIDE",
+      "options": [
+        { "value": "BANK_WIDE", "label": "Treat it as one bank-wide setting made outside the migration; self-approving users are sent as approvers in their rules" }
+      ],
+      "affects": ["Approval rule conversion (build step 5)"],
+      "status": "ASSUMED"
+    },
+    {
+      "id": "A-14",
+      "title": "Default approval mode",
+      "question": "In the DataMigration APIs too, is approval mode set per contract and customer, with user level as the default?",
+      "evidence": "Vendor Manage Approvals page: mode is set per contractId and coreCustomerId, and 'By default, the approval rules ... will be based on Users'. Vendor guide: UpdateApprovalMatrixMode fails with 'isGroupMatrix flag is same as the input (should be different to update)'.",
+      "defaultChoice": "GROUP_ONLY",
+      "choice": "GROUP_ONLY",
+      "options": [
+        { "value": "GROUP_ONLY", "label": "Call UpdateApprovalMatrixMode only for group-level customers; treat 'same as the input' as already set" }
+      ],
+      "affects": ["Plan: approval mode (build step 5)"],
       "status": "ASSUMED"
     }
   ]

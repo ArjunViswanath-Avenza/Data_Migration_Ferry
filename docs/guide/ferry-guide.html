@@ -259,7 +259,7 @@ footer .wrap { display: flex; flex-wrap: wrap; gap: 8px 24px; justify-content: s
     <h1>How <em>Data Migration Ferry</em> works</h1>
     <p class="lede">What the tool does, why we built it this way, everything finished so far, how to try it yourself, and what comes next. Written for anyone on the project: no coding knowledge needed, with optional deep-dives for engineers.</p>
     <div class="meta">
-      <span>Updated <b>29 October 2026</b></span>
+      <span>Updated <b>4 November 2026</b></span>
       <span>Built so far: <b>Steps 1–2 of 8</b></span>
       <span>Live calls to Temenos: <b>off</b></span>
       <span>Reading time: <b>about 25 minutes</b></span>
@@ -456,7 +456,7 @@ footer .wrap { display: flex; flex-wrap: wrap; gap: 8px 24px; justify-content: s
       <div class="card"><h4>Finding</h4><p>A problem found by a check. An <span class="pill p-bad">error</span> stops the record. A <span class="pill p-warn">warning</span> is only reported.</p></div>
       <div class="card"><h4>Voyage</h4><p>The plan for one contract: the ordered list of calls Ferry will make to create it and everything under it.</p></div>
       <div class="card"><h4>Dry run</h4><p>Working out exactly what would be sent, without sending anything. Everything Ferry does today is a dry run.</p></div>
-      <div class="card"><h4>Assumption</h4><p>A named, switchable decision (A-01 to A-12) Ferry makes where Temenos or the bank has not answered a question yet.</p></div>
+      <div class="card"><h4>Assumption</h4><p>A named, switchable decision (A-01 to A-14) Ferry makes where Temenos or the bank has not answered a question yet.</p></div>
       <div class="card"><h4>ID register</h4><p>Ferry's memory: which old ID became which new Temenos ID, per environment. It stops a rerun from creating anything twice.</p></div>
     </div>
   </section>
@@ -492,7 +492,7 @@ footer .wrap { display: flex; flex-wrap: wrap; gap: 8px 24px; justify-content: s
 
     <h3>Step 2 · Load files</h3>
     <div class="prose">
-      <p>You load Excel or CSV files: one workbook with a sheet per record type (Contracts, Accounts, Users, Signatory Groups), or one file per type. Ferry offers a ready-made <strong>template workbook</strong> with the right column names and a sheet of instructions.</p>
+      <p>You load Excel or CSV files: one workbook with a sheet per record type, or one file per type. Ferry offers a ready-made <strong>template workbook</strong> to share with the bank, with the right column names and instructions for every column. Besides contracts, accounts, users and signatory groups, it also collects limits, approval rules and payees. Today those extra sheets are loaded and field-checked; build steps 5 and 6 will turn them into API calls.</p>
       <p>Two details make this step trustworthy:</p>
       <ul>
         <li><strong>Every value is read as text.</strong> Spreadsheets love to turn <code>001000111</code> into <code>1000111</code>. Ferry reads exactly what the cell shows, so customer and account numbers keep their leading zeros.</li>
@@ -703,7 +703,7 @@ footer .wrap { display: flex; flex-wrap: wrap; gap: 8px 24px; justify-content: s
     <div class="ch-head"><div class="ch-num">Chapter 8 <span class="aud">Everyone</span></div><h2>Working without all the answers</h2></div>
     <div class="prose">
       <p class="intro">Some questions about the Temenos APIs could not be answered yet by Temenos or the bank. Instead of waiting, or guessing silently in the code, Ferry keeps an <strong>assumptions register</strong>.</p>
-      <p>Each open question gets an ID (A-01 to A-12), the evidence from the vendor material, a sensible default, and the alternatives. The choice can be switched in Settings, and every switch is recorded with the person's name. Most importantly, every record and plan step that relied on an assumption is <strong>tagged</strong> with it, so when the answer arrives we know exactly what to re-check.</p>
+      <p>Each open question gets an ID (A-01 to A-14), the evidence from the vendor material, a sensible default, and the alternatives. The choice can be switched in Settings, and every switch is recorded with the person's name. Most importantly, every record and plan step that relied on an assumption is <strong>tagged</strong> with it, so when the answer arrives we know exactly what to re-check.</p>
     </div>
     <figure>
       <div class="dgwrap">
@@ -728,7 +728,7 @@ footer .wrap { display: flex; flex-wrap: wrap; gap: 8px 24px; justify-content: s
           <tr><td><span class="tag">A-01</span></td><td>Can Temenos read a user's details from the core, so a user can be linked by CIF?</td><td>Per record: linked when the source gives the user a CIF, otherwise virtual</td><td>Always virtual</td></tr>
           <tr><td><span class="tag">A-02</span></td><td>In approval rules, is each group number a yes/no flag or a count of approvals?</td><td>Yes/no flag per group; "two from the same group" rules are parked</td><td>Count per group</td></tr>
           <tr><td><span class="tag">A-03</span></td><td>Do neighbouring amount brackets share the boundary value?</td><td>Shared boundary, as in the vendor examples</td><td>Next starts at previous + 1</td></tr>
-          <tr><td><span class="tag">A-04</span></td><td>How should an amount range that needs no approval be sent?</td><td>Not sent</td><td>Send as NO_APPROVAL</td></tr>
+          <tr><td><span class="tag">A-04</span></td><td>How should an amount range that needs no approval be sent?</td><td>Sent explicitly, with <code>numberOfApprovals</code> 0</td><td>Not sent</td></tr>
           <tr><td><span class="tag">A-05</span></td><td>How do "all transactions" rules become calls?</td><td>One call per action in the list set for the service definition</td><td>—</td></tr>
           <tr><td><span class="tag">A-06</span></td><td>Rules for actions that move no money?</td><td>Parked for review</td><td>Send with configured limit type</td></tr>
           <tr><td><span class="tag">A-07</span></td><td>What if a contract name already exists (vendor error 10401)?</td><td>Reported as its own outcome, never retried automatically</td><td>—</td></tr>
@@ -737,10 +737,12 @@ footer .wrap { display: flex; flex-wrap: wrap; gap: 8px 24px; justify-content: s
           <tr><td><span class="tag">A-10</span></td><td>What counts as success from Temenos?</td><td><code>opstatus</code> is 0 and there is no error code</td><td>Fields are configurable</td></tr>
           <tr><td><span class="tag">A-11</span></td><td>How many customers can safely be sent at once?</td><td>4 at a time</td><td>1, 2 or 8</td></tr>
           <tr><td><span class="tag">A-12</span></td><td>How do we roll back?</td><td>Temenos's DeleteMigratedData, limited to IDs Ferry created</td><td>—</td></tr>
+          <tr><td><span class="tag">A-13</span></td><td>Is self-approval one bank-wide setting?</td><td>Yes, set outside the migration; self-approving users are sent as approvers</td><td>—</td></tr>
+          <tr><td><span class="tag">A-14</span></td><td>Is approval mode per contract and customer, with user level as the default?</td><td>Yes, so the mode call is only made for group-level customers</td><td>—</td></tr>
         </tbody>
       </table>
     </div>
-    <figure class="shot"><img src="img/settings-assumptions.webp" alt="Settings, Assumptions tab: 12 open questions tracked, 12 working on an assumption, 0 confirmed, 0 changed, and the register with a choice drop-down for each." loading="lazy"><figcaption><b>Figure 14.</b> The register in Settings. Each row has the question, the evidence (expand it), the choice in force, its status and what it affects.</figcaption></figure>
+    <figure class="shot"><img src="img/settings-assumptions.webp" alt="Settings, Assumptions tab: 12 open questions tracked, 12 working on an assumption, 0 confirmed, 0 changed, and the register with a choice drop-down for each." loading="lazy"><figcaption><b>Figure 14.</b> The register in Settings. Each row has the question, the evidence (expand it), the choice in force, its status and what it affects. Captured when the register held 12 entries, before A-04 changed and A-13 and A-14 were added.</figcaption></figure>
   </section>
 
   <!-- 9 -->

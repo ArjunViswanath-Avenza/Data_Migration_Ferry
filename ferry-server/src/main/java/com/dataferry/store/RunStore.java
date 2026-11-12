@@ -82,7 +82,7 @@ public class RunStore {
         String where = "";
         if (area != null && !area.isBlank()) { where = " WHERE area = :area"; p.addValue("area", area); }
         return jdbc.queryForList("SELECT run_id, area, action, status, batch_id, environment, performed_by, started_at, " +
-                "finished_at, total_items, succeeded, failed, error_message FROM ferry_run" + where +
+                "finished_at, total_items, succeeded, failed, error_message, CAST(details AS VARCHAR(100000)) AS details FROM ferry_run" + where +
                 " ORDER BY started_at DESC LIMIT " + Math.max(1, Math.min(limit, 500)), p);
     }
 }

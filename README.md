@@ -9,11 +9,17 @@ A standalone, one-stop tool that carries customer data from **any source system*
 | **Crossing** | Execute the plan against the target, with retries and live progress | Next |
 | **Manifest** | Results per item and step, ID register, reconciliation, exceptions, Excel export | Planned |
 | **Return Crossing** | Roll back selected contracts or users through the vendor delete API | Planned |
+| **Disembark** (Tools) | Un-enrol one customer from the Temenos Digital database: reviewable script, read-only preview, or (when switched on) a guarded delete | Built |
+| **Dry Dock** (Tools) | Compare two database schemas from SQL files, choose what travels, and get a refit script and a data move script | Built |
 
 The full design is in [docs/DESIGN.md](docs/DESIGN.md). How the console is built, and how to add a
 feature to it, is in [docs/CONSOLE.md](docs/CONSOLE.md).
 A plain-language, illustrated guide for technical and non-technical readers is in
-[docs/guide/ferry-guide.html](docs/guide/ferry-guide.html) (open it in a browser).
+[docs/guide/ferry-guide.html](docs/guide/ferry-guide.html) (open it in a browser). The standard data
+template to share with a bank is described in [docs/DATA_TEMPLATE.md](docs/DATA_TEMPLATE.md), and the
+files are in [templates/](templates/). Dry Dock, the schema comparison tool, is described in
+[docs/DRY_DOCK.md](docs/DRY_DOCK.md), and Disembark, the single-customer un-enrolment utility, in
+[docs/DISEMBARK.md](docs/DISEMBARK.md).
 
 ## Run it
 
