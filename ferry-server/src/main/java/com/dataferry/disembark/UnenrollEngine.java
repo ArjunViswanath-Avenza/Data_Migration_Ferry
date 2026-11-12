@@ -214,7 +214,8 @@ public final class UnenrollEngine {
             String stmt = "DELETE FROM " + q(schema, d.table) + " WHERE " + where(d, lit) + ";";
             Long n = counts.get(d.table + "#" + d.column);
             if (!d.confirmed) {
-                b.append("-- OFF in config/unenroll.json").append(d.note == null ? "" : ": " + d.note).append("\n-- ").append(stmt).append("\n");
+                String why = d.note == null ? "" : ": " + d.note.replaceFirst("(?i)^off:\\s*", "");
+                b.append("-- OFF in config/unenroll.json").append(why).append("\n-- ").append(stmt).append("\n");
             } else if (missing.contains(d.table)) {
                 b.append("-- LEFT OUT: this database has no table ").append(d.table).append("\n-- ").append(stmt).append("\n");
             } else if (n != null && n > p.maxRowsPerTableGuard) {

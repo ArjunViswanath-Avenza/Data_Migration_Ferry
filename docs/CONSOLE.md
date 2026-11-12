@@ -21,7 +21,7 @@ ferry-console/src/
     ├── registry.js       finds every module folder at build time
     ├── PlannedModule.jsx page shown for modules not built yet
     ├── boarding/         live
-    ├── crossing/         planned (step 3)
+    ├── crossing/         live (survey, run, mock target switches)
     ├── manifest/         planned (step 4)
     ├── return-crossing/  planned (step 7)
     ├── drydock/          live (Tools: schema compare and refit)

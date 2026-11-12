@@ -4,6 +4,9 @@ A standalone, one-stop tool that carries customer data from **any source system*
 **Temenos Digital** through the product's own `DataMigration` APIs, and proves what arrived.
 Nothing in the tool is specific to one bank: every bank-specific value lives in configuration.
 
+> How the open questions are handled without vendor answers, and the evidence behind A-02 to A-15, is in
+> [PROCEEDING_WITHOUT_ANSWERS.md](PROCEEDING_WITHOUT_ANSWERS.md).
+
 ## 1. Principles
 
 1. **Source-agnostic, target-pluggable.** Any core banking export (Excel, CSV, database extract)
@@ -77,19 +80,20 @@ Changing one lists every record that relied on it, so those can be re-checked or
 | ID | Question | Default | Switch to |
 |---|---|---|---|
 | A-01 | Can the target read customers from the source core? | Per record: linked user if the source gives the user a CIF, else virtual user | Always virtual |
-| A-02 | `groupRule` format | 1/0 flag per group; "N from the same group" parked (counts look likely) | Count per group |
+| A-02 | `groupRule` format | Count per group (the product stores 2–6 in 2,211 rules) | 1/0 flag per group |
 | A-03 | Amount bracket boundaries | Neighbouring brackets share the boundary value (vendor examples, Manage Approvals) | Next lower = previous upper + 1 |
 | A-04 | Ranges that need no approval | Sent explicitly with `numberOfApprovals` 0 | Not sent |
 | A-05 | "All transactions" rules | Expanded to the action list configured per service definition | — |
-| A-06 | Rules for actions that move no money | Parked for review | Send with configured limit type |
+| A-06 | Rules for actions that move no money | Send as `NON_MONETARY_LIMIT`, -1 to -1 (as the product stores them) | Park for review |
 | A-07 | Contract-name clash (vendor error 10401) | Own outcome, no automatic retry | — |
 | A-08 | Virtual user missing a "mandatory" field | Record blocked | Send blank |
 | A-09 | Account under more than one contract (joint) | Excluded and listed | Include |
 | A-10 | What counts as success | `opstatus` 0 and no `dbpErrCode` | Configurable fields |
 | A-11 | Safe parallelism | 4 contracts at a time | Any number |
-| A-12 | Rollback | Vendor `DeleteMigratedData` | — |
+| A-12 | Rollback | Vendor `DeleteMigratedData` | Disembark script per CIF |
 | A-13 | Self-approval setting | One bank-wide setting made outside the migration; self-approving users sent as approvers | — |
 | A-14 | Default approval mode | Mode call only for group-level customers; user level is the default | — |
+| A-15 | Approval rules per account | One rule call per account of the contract | One contract-wide call |
 
 Status per assumption: **Assumed** (our default), **Confirmed** (vendor or bank answered), **Overridden**.
 

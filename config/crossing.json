@@ -1,0 +1,61 @@
+{
+  "_comment": "Crossing: how a reviewed plan is run against the target. Read at the start of every run. See docs/CROSSING.md and docs/PROCEEDING_WITHOUT_ANSWERS.md.",
+
+  "pilotContracts": 3,
+  "_pilotContracts": "The first contracts of every run are a pilot: the run pauses after them until someone reviews and continues.",
+
+  "stopRules": {
+    "minVoyagesBeforeShare": 5,
+    "maxFailedShare": 0.2,
+    "maxConsecutiveFailures": 5,
+    "stopOnReadBackMismatch": true,
+    "stopOnUnknownOutcome": true
+  },
+
+  "retry": {
+    "attempts": 3,
+    "backoffSeconds": [2, 5, 15]
+  },
+  "requestTimeoutSeconds": 60,
+  "tokenRenewBeforeSeconds": 120,
+  "defaultTokenLifetimeSeconds": 1200,
+
+  "resultIds": {
+    "_comment": "Where each operation's response carries the new ID. The vendor samples show 'id' for signatory groups; contract and user responses are not in the samples, so likely names are tried in order and read-back looks the ID up when none is found.",
+    "CreateContract": ["contractId", "id"],
+    "CreateVirtualUser": ["customerId", "userId", "id"],
+    "LinkUserToContract": ["customerId", "userId", "id"],
+    "CreateSignatoryGroup": ["signatoryGroupId", "id"]
+  },
+
+  "readBack": {
+    "_comment": "Read-only checks after each call, in the shape the product itself stores (docs/PROCEEDING_WITHOUT_ANSWERS.md). Parameters: :id (the new ID), every field of the request (IDs already filled in), :accountCount and :signatoryCount. 'lookup' finds the ID when the response has none or the call timed out; it must return exactly one row.",
+    "CreateContract": {
+      "lookup": "SELECT contractId FROM contractcorecustomers WHERE coreCustomerId = :primaryCif",
+      "verify": [
+        { "label": "Contract exists", "sql": "SELECT COUNT(*) FROM contract WHERE id = :id", "expect": "= 1" },
+        { "label": "Primary CIF is on the contract", "sql": "SELECT COUNT(*) FROM contractcorecustomers WHERE contractId = :id AND coreCustomerId = :primaryCif", "expect": "= 1" },
+        { "label": "Every account is on the contract", "sql": "SELECT COUNT(*) FROM contractaccounts WHERE contractId = :id", "expect": "= :accountCount" }
+      ]
+    },
+    "CreateVirtualUser": {
+      "verify": [
+        { "label": "Login exists", "sql": "SELECT COUNT(*) FROM customer WHERE id = :id", "expect": "= 1" },
+        { "label": "Login is on the contract", "sql": "SELECT COUNT(*) FROM contractcustomers WHERE contractId = :contractId AND customerId = :id", "expect": ">= 1" }
+      ]
+    },
+    "LinkUserToContract": {
+      "verify": [
+        { "label": "Login exists", "sql": "SELECT COUNT(*) FROM customer WHERE id = :id", "expect": "= 1" },
+        { "label": "Login is on the contract", "sql": "SELECT COUNT(*) FROM contractcustomers WHERE contractId = :contractId AND customerId = :id", "expect": ">= 1" }
+      ]
+    },
+    "CreateSignatoryGroup": {
+      "lookup": "SELECT signatoryGroupId FROM signatorygroup WHERE contractId = :contractId AND signatoryGroupName = :signatoryGroupName",
+      "verify": [
+        { "label": "Group exists", "sql": "SELECT COUNT(*) FROM signatorygroup WHERE signatoryGroupId = :id", "expect": "= 1" },
+        { "label": "Every member is in the group", "sql": "SELECT COUNT(*) FROM customersignatorygroup WHERE signatoryGroupId = :id", "expect": "= :signatoryCount" }
+      ]
+    }
+  }
+}

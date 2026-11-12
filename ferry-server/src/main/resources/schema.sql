@@ -106,3 +106,52 @@ CREATE TABLE IF NOT EXISTS ferry_plan (
     planned_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (batch_id, contract_ref)
 );
+
+-- Crossing: one row per run of a reviewed plan, one row per step sent (or skipped).
+CREATE TABLE IF NOT EXISTS ferry_crossing (
+    run_id        VARCHAR(40) PRIMARY KEY,
+    batch_id      VARCHAR(40)  NOT NULL,
+    environment   VARCHAR(60)  NOT NULL,
+    state         VARCHAR(20)  NOT NULL,
+    reason        VARCHAR(1000),
+    read_back     VARCHAR(20),
+    pilot         INT,
+    parallelism   INT,
+    contracts     INT,
+    started_by    VARCHAR(100),
+    started_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at    TIMESTAMP,
+    finished_at   TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS ferry_crossing_voyage (
+    run_id        VARCHAR(40)  NOT NULL,
+    contract_ref  VARCHAR(200) NOT NULL,
+    seq           INT          NOT NULL,
+    outcome       VARCHAR(20)  NOT NULL,
+    reason        VARCHAR(1000),
+    started_at    TIMESTAMP,
+    finished_at   TIMESTAMP,
+    PRIMARY KEY (run_id, contract_ref)
+);
+
+CREATE TABLE IF NOT EXISTS ferry_crossing_step (
+    id            BIGINT AUTO_INCREMENT PRIMARY KEY,
+    run_id        VARCHAR(40)  NOT NULL,
+    contract_ref  VARCHAR(200) NOT NULL,
+    step_id       VARCHAR(250) NOT NULL,
+    operation     VARCHAR(60)  NOT NULL,
+    subject_type  VARCHAR(40),
+    subject_ref   VARCHAR(200),
+    outcome       VARCHAR(30)  NOT NULL,
+    attempts      INT DEFAULT 0,
+    target_id     VARCHAR(200),
+    error_code    VARCHAR(40),
+    message       VARCHAR(2000),
+    request_json  CLOB,
+    response_json CLOB,
+    read_back     CLOB,
+    millis        BIGINT,
+    at            TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS ix_crossing_step_run ON ferry_crossing_step (run_id, contract_ref);

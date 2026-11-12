@@ -1,0 +1,16 @@
+/* Crossing. Built only from the design tokens. */
+.cr-db { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; }
+.cr-check { display: inline-flex; align-items: center; gap: 8px; font-size: var(--text-sm); color: var(--text-2); cursor: pointer; }
+.cr-check input { accent-color: var(--accent); width: 15px; height: 15px; margin: 0; flex: none; }
+.cr-switches { display: flex; flex-wrap: wrap; gap: 8px 20px; }
+.cr-progress { height: 8px; border-radius: 999px; background: var(--surface-sunken); overflow: hidden; }
+.cr-progress span { display: block; height: 100%; background: var(--accent); transition: width var(--dur) var(--ease); }
+.cr-steps { display: flex; flex-direction: column; gap: 6px; }
+.cr-h { font-size: var(--text-md); }
+.cr-step { border: 1px solid var(--line); border-radius: var(--radius); padding: 8px 12px; background: var(--surface); }
+.cr-step > summary { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: var(--text-sm); }
+.cr-rb { list-style: none; margin: 6px 0; padding: 0; font-size: var(--text-xs); display: flex; flex-direction: column; gap: 2px; }
+.cr-rb .ok { color: var(--ok); } .cr-rb .bad { color: var(--danger); font-weight: 600; }
+.cr-json { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 10px; margin-top: 6px; }
+.cr-json pre { margin: 4px 0 0; font-family: var(--font-mono); font-size: 11.5px; line-height: 1.5; background: var(--surface-sunken); border: 1px solid var(--line);
+  border-radius: var(--radius-sm); padding: 10px; max-height: 260px; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; }
