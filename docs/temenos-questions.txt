@@ -1,0 +1,230 @@
+Temenos Digital DataMigration APIs - our questions
+4 November 2026
+
+We are building a migration tool on the DataMigration APIs that works for banks on any core
+banking system. We have read your guide ("Temenos Digital Data Migration and flows"), your
+Postman collection and your Manage Approvals page (updated 3 September 2024). Below are the
+points we could not settle from them.
+
+For each question we also say what we are assuming for now, so the build can continue. Please
+tell us where an assumption is wrong.
+
+Questions 1, 2, 3 and 5 are the most urgent. Questions 4 and 11 only need a confirmation.
+
+
+-------------------------------------------------------------------------------------------
+SETUP
+-------------------------------------------------------------------------------------------
+
+1. Which core banking systems do the APIs support?
+   The guide lists only "PartyMS, T24 User API". Which other cores work, how are they
+   connected, and which APIs read data from the core?
+
+   We assume: a user who has their own customer number is added with LinkUserToContract, and
+   every other user with CreateVirtualUser. If a bank's core is not supported, we would create
+   every user with CreateVirtualUser.
+
+2. Which release has these APIs, and how do we find the legal entity?
+   From which release are the DataMigration APIs, the reconciliation report, the exception log
+   and DeleteMigratedData available? How does a bank find its legalEntityId?
+
+   We assume: everything in the guide is available in the target release, and each environment
+   has one default legal entity, used unless the source data gives another.
+
+
+-------------------------------------------------------------------------------------------
+APPROVAL RULES
+-------------------------------------------------------------------------------------------
+
+3. In groupRule, is each number a count of approvals?
+   Manage Approvals allows "N approvals from a group". Your step 7 example explains
+   "[[1,2,1,3],[1,3,2,1]]" as "1 approver from the 1st group AND 2 approvers from the 2nd
+   group", but other samples only use 0 and 1. Please confirm, with a sample for "2 approvals
+   from group A".
+
+   We assume: counts are likely. Until you confirm, we send 1 for one approval from a group and
+   hold back any rule that needs 2 or more approvals from the same group.
+
+4. Please confirm: do amount ranges in the DataMigration APIs work as in Manage Approvals?
+   Manage Approvals defines a range as above the lower value, up to and including the upper
+   value, with no gaps, always ending in "Above". It says ranges must stay within the company
+   limit, but also that "Above" covers the range "irrespective of the Max Limit". Which applies?
+
+   We assume: yes. For "-1.00 to 1,000" then "1,000 to -1.00", an amount of exactly 1,000 falls
+   in the first range, and 1,000.50 and 1,001 fall in the second. The last range stays open.
+
+
+-------------------------------------------------------------------------------------------
+CONTRACTS AND USERS
+-------------------------------------------------------------------------------------------
+
+5. What causes "A contract is already existing with given name" (error 10401)?
+   CreateContract has no name field. How is the name made, must it be unique, and how do we
+   check whether a contract was created if a call times out?
+
+   We assume: this error is reported for review and never retried automatically. We keep our
+   own record of every contract we create, so a re-run does not create it again.
+
+6. Which user API should we use, and which fields may be empty?
+   For a business user without their own customer number, is CreateVirtualUser right? Can
+   middleName and taxId be empty? What formats do phone and date of birth take?
+
+   We assume: such users go through CreateVirtualUser, and a user missing any field the guide
+   marks mandatory is held back until the bank fills it in.
+
+7. How do migrated users log in for the first time?
+   If we send the old login name as legacyUserName, what does the user type at first login?
+   Can the old password be checked against the legacy system?
+
+   We assume: the old login name is kept through legacyUserName, and passwords and
+   authentication are set up outside these APIs, as your guide says for HID and Uniken.
+
+
+-------------------------------------------------------------------------------------------
+MORE ON APPROVAL RULES
+-------------------------------------------------------------------------------------------
+
+8. What is the exact format for an amount range that needs no approval?
+   Manage Approvals treats this as an explicit range with "Approval Required" off. The guide
+   lists numberOfApprovals 0 = NO_APPROVAL, but the Postman request using it failed (error
+   87115). What is the format in user mode and in group mode? What do isGroupMatrix and
+   approvalruleId do?
+
+   We assume: these ranges are sent, not left out, using numberOfApprovals 0 with no approvers.
+   We need your format for group mode.
+
+9. How many rule calls does one "all transactions" rule need?
+   Manage Approvals sets rules per action and per limit type (per transaction, daily, weekly).
+   Must every monetary action have rules for all three limit types? How do we get the list of
+   approval-enabled actions (Postman mentions 78 for SME)? Non-monetary actions have no amount
+   ranges, so what limitTypeId and limits do we send for them?
+
+   We assume: one call per action in the list the bank configures for the service definition,
+   for the limit types the source rule defines (per transaction if it doesn't say). Rules for
+   non-monetary actions are held back for review.
+
+10. Is self-approval one bank-wide setting, and how is it set for a migration?
+    Manage Approvals describes isSelfApprovalEnabled "in the application table". The
+    DataMigration guide does not mention it. Can it be set per customer or per user? Who sets
+    it, and how?
+
+    We assume: it is one bank-wide setting, made outside these APIs. Because the initiator must
+    be a valid approver, self-approving users are included as approvers in their rules.
+
+11. Please confirm: are approval mode and rules set per contract and customer number?
+    Manage Approvals sets mode per contractId and coreCustomerId, with user level as the default.
+    Does the same apply to UpdateApprovalMatrixMode? Is a separate rule created for each customer
+    number on a contract with several?
+
+    We assume: yes. We call UpdateApprovalMatrixMode only for group-level customers. If it says
+    the mode is already set (error 10205 "same as the input"), we treat that as done.
+
+12. Can the APIs change approval rules and groups after they are created?
+    Manage Approvals lets users edit and delete rules in the app. What happens if
+    CreateApprovalMatrixRule is sent twice for the same case? The guide names
+    UpdateApprovalMatrix but does not describe it. Can signatory groups be edited or removed?
+
+    We assume: each rule and group is created once. We record what we create and do not send it
+    again on a re-run. Corrections are made by hand until you confirm the right method.
+
+
+-------------------------------------------------------------------------------------------
+REMOVING MIGRATED DATA (DeleteMigratedData)
+-------------------------------------------------------------------------------------------
+
+13. What does DeleteMigratedData remove?
+    The only example removes one virtual user. Can it remove a whole contract with its users,
+    groups, approval rules, limits and payees? Which IDs does it need?
+
+    We assume: we use it only for items our tool created and recorded, and we do not rely on it
+    to remove a whole contract until you confirm what it covers.
+
+14. Can it remove customers whose migration succeeded, or who were created another way?
+    The guide says it removes "migrated error data". What if the customer has made payments
+    since migration?
+
+    We assume: it is meant for cleaning up failed migrations. Customers created outside our tool
+    are out of scope.
+
+15. Is a delete all-or-nothing, and can we preview it?
+    If one table fails, are the other deletes undone? Is each call logged? Is it allowed in
+    production?
+
+    We assume: it is not all-or-nothing and has no preview. We show what would be removed from
+    our own records first, delete one item at a time, and log every call ourselves.
+
+
+-------------------------------------------------------------------------------------------
+RUNNING THE MIGRATION
+-------------------------------------------------------------------------------------------
+
+16. How fast can we run?
+    How many calls can run in parallel? How long does a login token last, and should we use the
+    refresh token? Are there rate limits?
+
+    We assume: 4 contracts at a time, each contract's steps in order, and the token renewed
+    before it expires (the sample token lasts 20 minutes).
+
+17. Can one account belong to two contracts (joint accounts)?
+
+    We assume: no. An account listed under more than one contract is left out of all of them and
+    reported to the bank.
+
+18. What counts as success?
+    Your Postman failures return opstatus 0 with an error code.
+
+    We assume: a call succeeded only when opstatus is 0 and there is no dbpErrCode, dbpErrMsg or
+    errmsg. HTTP 200 alone is not success.
+
+19. Where do the reconciliation counts come from, and when are limits and payees migrated?
+    GetMigrationReconReport needs expected counts per customer. How does a bank get them for its
+    own service definitions?
+
+    We assume: the bank provides the expected counts, and limits and payees are migrated after
+    contracts, users, signatory groups and approval rules.
+
+
+-------------------------------------------------------------------------------------------
+NEW APPROVAL POINTS FROM MANAGE APPROVALS
+-------------------------------------------------------------------------------------------
+
+20. Which permissions must approvers have before rules are created?
+    Manage Approvals warns when a group has too few approvers or its users lack the required
+    permissions. Do CreateSignatoryGroup or CreateApprovalMatrixRule check this? Which
+    permissions are needed?
+
+    We assume: the role given when the user is migrated carries the permissions. We check that a
+    group has at least as many members as the approvals a rule needs.
+
+21. What happens to customers who have no approval rules?
+    Approvals are on by default, and updateApprovalMatrixStatus can turn them off. With approvals
+    on and no rules set, do this customer's transactions go straight through or stop? Should a
+    migration turn approvals off for them? The DataMigration APIs have no such call.
+
+    We assume: we leave the setting at its default and make no call.
+
+
+-------------------------------------------------------------------------------------------
+THINGS IN YOUR MATERIAL THAT LOOK WRONG
+-------------------------------------------------------------------------------------------
+
+- The "Flow Diagram" heading has no diagram.
+- DeleteMigratedData has no section heading.
+- CreateBillPayPayee's parameter table is copied from CreatePayee.
+- "UpdateApprovalMatrix" is mentioned but never described.
+- CreateP2PPayee lists the email field twice.
+- The exception and delete APIs list an error copied from the reconciliation API.
+- Error 21018 is described as a permission error, but your exception-log example shows
+  "Signatory user not found in contract".
+- UpdateApprovalMatrixMode returns "Updated Successfully" in the guide but "Created Successfully"
+  in Postman.
+- In Postman, {{DBX_BASE_URL}} is not defined, and DBP_CORE_APP_KEY and DBP_CORE_SECRET are
+  never used.
+- "Update Limits- Contract Copy" duplicates another request.
+- The collection includes an app key and secret. Please confirm they are demo values.
+- Manage Approvals: the compound-condition example uses "Senior Manager" twice, straight after
+  saying a group can't be reused in the same condition.
+
+
+Thank you.
+[Name, email]

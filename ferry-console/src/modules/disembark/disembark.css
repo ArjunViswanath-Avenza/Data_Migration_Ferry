@@ -1,0 +1,8 @@
+/* Disembark. Built only from the design tokens. */
+.de-db { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; }
+.de-list { margin: 6px 0 0; padding-left: 18px; display: flex; flex-direction: column; gap: 3px; font-size: var(--text-xs); }
+.de-check { display: inline-flex; align-items: center; gap: 8px; font-size: var(--text-sm); color: var(--text-2); cursor: pointer; max-width: 360px; }
+.de-check input { accent-color: var(--danger); width: 15px; height: 15px; margin: 0; flex: none; }
+pre.de-script { margin: 0; font-family: var(--font-mono); font-size: 12px; line-height: 1.55; background: var(--ink-950); color: #e6e9ef; border-radius: var(--radius);
+  padding: 14px 16px; max-height: 520px; overflow: auto; white-space: pre; border: 1px solid var(--line); }
+pre.de-script:focus-visible { box-shadow: var(--focus); outline: none; }

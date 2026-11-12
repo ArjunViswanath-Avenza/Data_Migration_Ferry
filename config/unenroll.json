@@ -1,0 +1,113 @@
+{
+  "_comment": "Disembark (Tools): removes everything one customer's enrolment created in the Temenos Digital DBXDB schema (MySQL), keyed by one core customer ID (CIF). The engine holds no table names: every lookup and delete is listed here. Order matters: resolve steps run first and their IDs are held, then delete steps run top to bottom (children first, anchors last) in ONE transaction. A step with confirmed=false is listed but never run; switch it on only after review. Unknown keys stop the server with a clear message.",
+  "_origin": "Ported from the DM Studio un-enrolment module (rollback_config.json, validated against a real UAT copy) plus the product team's customer delete list. Steps that came only from the product list and touch payment history are off by default.",
+
+  "schema": "dbxdb",
+  "keyLabel": "Core customer ID (CIF)",
+  "keyPattern": "^[A-Za-z0-9_-]{1,64}$",
+  "maxRowsPerTableGuard": 5000,
+  "allowExecute": false,
+
+  "resolveSteps": [
+    { "name": "contractId", "sql": "SELECT contractId FROM contractcorecustomers WHERE coreCustomerId = :cif", "note": "Contracts this CIF is on" },
+    { "name": "customerId", "sql": "SELECT customerId FROM contractcustomers WHERE coreCustomerId = :cif", "note": "Logins (users) linked to this CIF" },
+    { "name": "signatoryGroupId", "sql": "SELECT signatoryGroupId FROM signatorygroup WHERE coreCustomerId = :cif" },
+    { "name": "approvalMatrixId", "sql": "SELECT cam.approvalMatrixId FROM customerapprovalmatrix cam JOIN contractcustomers cc ON cam.customerId = cc.customerId WHERE cc.coreCustomerId = :cif" },
+    { "name": "customRoleId", "sql": "SELECT customRoleId FROM contractcustomrole WHERE coreCustomerId = :cif" },
+    { "name": "addressId", "sql": "SELECT Address_id FROM customeraddress WHERE Customer_id IN (SELECT customerId FROM contractcustomers WHERE coreCustomerId = :cif) UNION SELECT addressId FROM contractaddress WHERE contractId IN (SELECT contractId FROM contractcorecustomers WHERE coreCustomerId = :cif)" },
+    { "name": "accountId", "sql": "SELECT Account_id FROM customeraccounts WHERE Customer_id IN (SELECT customerId FROM contractcustomers WHERE coreCustomerId = :cif)" },
+    { "name": "userName", "sql": "SELECT UserName FROM customer WHERE id IN (SELECT customerId FROM contractcustomers WHERE coreCustomerId = :cif)" },
+    { "name": "customerRequestId", "sql": "SELECT id FROM customerrequest WHERE Customer_id IN (SELECT customerId FROM contractcustomers WHERE coreCustomerId = :cif)" }
+  ],
+
+  "checks": [
+    {
+      "id": "SHARED_LOGIN",
+      "label": "Login shared with another CIF",
+      "sql": "SELECT customerId AS item, GROUP_CONCAT(DISTINCT coreCustomerId ORDER BY coreCustomerId SEPARATOR ', ') AS others FROM contractcustomers WHERE customerId IN (:customerId) AND coreCustomerId <> :cif GROUP BY customerId",
+      "message": "This login is also linked to other CIFs on its contract (for example one person with access to several legal entities of the same company). Deleting it removes that person's access to the other CIFs too."
+    },
+    {
+      "id": "SHARED_CONTRACT",
+      "label": "Contract shared with another CIF",
+      "sql": "SELECT contractId AS item, GROUP_CONCAT(DISTINCT coreCustomerId ORDER BY coreCustomerId SEPARATOR ', ') AS others FROM contractcorecustomers WHERE contractId IN (:contractId) AND coreCustomerId <> :cif GROUP BY contractId",
+      "message": "This contract also holds other CIFs. Contract-side deletes remove the whole contract, so those CIFs lose it too. Stop unless that is intended."
+    }
+  ],
+
+  "deleteSteps": [
+    { "group": "Approval matrix", "table": "signatorygroupmatrix", "column": "approvalMatrixId", "using": "approvalMatrixId" },
+    { "group": "Approval matrix", "table": "signatorygroupmatrixtemplate", "column": "approvalMatrixId", "using": "approvalMatrixId" },
+    { "group": "Approval matrix", "table": "customerapprovalmatrix", "column": "customerId", "using": "customerId" },
+    { "group": "Approval matrix", "table": "customerapprovalmatrixtemplate", "column": "customerId", "using": "customerId" },
+    { "group": "Approval matrix", "table": "manageapprovalmatrix", "column": "coreCustomerId", "using": "cif" },
+
+    { "group": "Signatory groups", "table": "customersignatorygroup", "column": "customerId", "using": "customerId" },
+    { "group": "Signatory groups", "table": "customersignatoryparing", "column": "corecustomerid", "using": "cif" },
+    { "group": "Signatory groups", "table": "customrolesignatorygroup", "column": "signatoryGroupId", "using": "signatoryGroupId" },
+    { "group": "Signatory groups", "table": "signatorygroup", "column": "coreCustomerId", "using": "cif" },
+
+    { "group": "Custom roles", "table": "customroleactionlimits", "column": "coreCustomerId", "using": "cif" },
+    { "group": "Custom roles", "table": "customroleaccounts", "column": "coreCustomerId", "using": "cif" },
+    { "group": "Custom roles", "table": "excludedcustomroleaccounts", "column": "coreCustomerId", "using": "cif" },
+    { "group": "Custom roles", "table": "contractcustomrole", "column": "coreCustomerId", "using": "cif" },
+    { "group": "Custom roles", "table": "customrole", "column": "id", "using": "customRoleId", "confirmed": false, "note": "Off: a custom role may be shared across an organisation. Confirm it belongs to this customer only before switching it on." },
+
+    { "group": "Customer side", "table": "customeraccounts", "column": "Customer_id", "using": "customerId" },
+    { "group": "Customer side", "table": "customeraction", "column": "Customer_id", "using": "customerId" },
+    { "group": "Customer side", "table": "customeractionlimits", "column": "Customer_id", "using": "customerId" },
+    { "group": "Customer side", "table": "customergroup", "column": "Customer_id", "using": "customerId" },
+    { "group": "Customer side", "table": "customerlimitgrouplimits", "column": "Customer_id", "using": "customerId" },
+    { "group": "Customer side", "table": "customercommunication", "column": "Customer_id", "using": "customerId" },
+    { "group": "Customer side", "table": "customeraddress", "column": "Customer_id", "using": "customerId" },
+    { "group": "Customer side", "table": "customerpreference", "column": "Customer_id", "using": "customerId" },
+    { "group": "Customer side", "table": "customerentitlement", "column": "Customer_id", "using": "customerId" },
+    { "group": "Customer side", "table": "customeralertentitlement", "column": "Customer_id", "using": "customerId" },
+    { "group": "Customer side", "table": "dbxcustomeralertentitlement", "column": "Customer_id", "using": "customerId" },
+    { "group": "Customer side", "table": "customeralertchannel", "column": "customerId", "using": "customerId", "note": "From the product team's delete list" },
+    { "group": "Customer side", "table": "customeralertswitch", "column": "Customer_id", "using": "customerId", "note": "From the product team's delete list" },
+    { "group": "Customer side", "table": "custcompletedcampaign", "column": "Customer_id", "using": "customerId", "note": "From the product team's delete list" },
+    { "group": "Customer side", "table": "customerbusinesstype", "column": "Customer_id", "using": "customerId", "note": "From the product team's delete list" },
+    { "group": "Customer side", "table": "customerlegalentity", "column": "Customer_id", "using": "customerId", "note": "From the product team's delete list" },
+    { "group": "Customer side", "table": "backendidentifier", "column": "Customer_id", "using": "customerId", "note": "From the product team's delete list" },
+    { "group": "Customer side", "table": "csrassistgrant", "column": "customerId", "using": "customerId", "note": "From the product team's delete list" },
+    { "group": "Customer side", "table": "requestmessage", "column": "CustomerRequest_id", "using": "customerRequestId", "note": "From the product team's delete list; must run before customerrequest" },
+    { "group": "Customer side", "table": "customerrequest", "column": "Customer_id", "using": "customerId" },
+    { "group": "Customer side", "table": "customerdevice", "column": "Customer_id", "using": "customerId" },
+    { "group": "Customer side", "table": "coremembership", "column": "Customer_id", "using": "customerId" },
+    { "group": "Customer side", "table": "passwordhistory", "column": "Customer_id", "using": "customerId" },
+    { "group": "Customer side", "table": "credentialchecker", "column": "UserName", "using": "userName" },
+
+    { "group": "Payees and payment history", "table": "intrabankpayee", "column": "createdby", "using": "customerId", "confirmed": false, "note": "Off: from the product team's list. Removes the customer's saved payees; switch on once the bank agrees." },
+    { "group": "Payees and payment history", "table": "interbankpayee", "column": "createdby", "using": "customerId", "confirmed": false, "note": "Off: saved payees (product team's list)." },
+    { "group": "Payees and payment history", "table": "p2ppayee", "column": "createdby", "using": "customerId", "confirmed": false, "note": "Off: saved payees (product team's list)." },
+    { "group": "Payees and payment history", "table": "billpaypayee", "column": "createdby", "using": "customerId", "confirmed": false, "note": "Off: saved payees (product team's list)." },
+    { "group": "Payees and payment history", "table": "wiretransferspayee", "column": "createdby", "using": "customerId", "confirmed": false, "note": "Off: saved payees (product team's list)." },
+    { "group": "Payees and payment history", "table": "ownaccounttransfers", "column": "createdby", "using": "customerId", "confirmed": false, "note": "Off: payment history (product team's list). Check record-keeping rules before switching on." },
+    { "group": "Payees and payment history", "table": "intrabanktransfers", "column": "createdby", "using": "customerId", "confirmed": false, "note": "Off: payment history (product team's list)." },
+    { "group": "Payees and payment history", "table": "interbankfundtransfers", "column": "createdby", "using": "customerId", "confirmed": false, "note": "Off: payment history (product team's list)." },
+    { "group": "Payees and payment history", "table": "p2ptransfers", "column": "createdby", "using": "customerId", "confirmed": false, "note": "Off: payment history (product team's list)." },
+    { "group": "Payees and payment history", "table": "billpaytransfers", "column": "createdby", "using": "customerId", "confirmed": false, "note": "Off: payment history (product team's list)." },
+    { "group": "Payees and payment history", "table": "wiretransfers", "column": "createdby", "using": "customerId", "confirmed": false, "note": "Off: payment history (product team's list)." },
+    { "group": "Payees and payment history", "table": "bbactedrequest", "column": "createdby", "using": "customerId", "confirmed": false, "note": "Off: business banking requests (product team's list)." },
+    { "group": "Payees and payment history", "table": "bbrequest", "column": "createdby", "using": "customerId", "confirmed": false, "note": "Off: business banking requests (product team's list)." },
+    { "group": "Payees and payment history", "table": "bbtemplate", "column": "createdby", "using": "customerId", "confirmed": false, "note": "Off: business banking templates (product team's list)." },
+    { "group": "Payees and payment history", "table": "achtransaction", "column": "createdby", "using": "customerId", "confirmed": false, "note": "Off: ACH history (product team's list)." },
+
+    { "group": "Contract side", "table": "contractaccounts", "column": "contractId", "using": "contractId" },
+    { "group": "Contract side", "table": "excludedcontractaccounts", "column": "contractId", "using": "contractId", "note": "From the product team's delete list" },
+    { "group": "Contract side", "table": "accountlevelactionlimit", "column": "contractId", "using": "contractId", "note": "From the product team's delete list" },
+    { "group": "Contract side", "table": "contractaddress", "column": "contractId", "using": "contractId" },
+    { "group": "Contract side", "table": "contractcommunication", "column": "contractId", "using": "contractId" },
+    { "group": "Contract side", "table": "contractfeatures", "column": "contractId", "using": "contractId" },
+    { "group": "Contract side", "table": "contractactionlimit", "column": "contractId", "using": "contractId" },
+    { "group": "Contract side", "table": "contractcustomers", "column": "contractId", "using": "contractId", "note": "Shared contract: removes every login's link to this contract" },
+    { "group": "Contract side", "table": "contractcorecustomers", "column": "contractId", "using": "contractId", "note": "Shared contract: removes every CIF on this contract" },
+
+    { "group": "Address and accounts", "table": "address", "column": "id", "using": "addressId" },
+    { "group": "Address and accounts", "table": "accounts", "column": "Account_id", "using": "accountId", "confirmed": false, "note": "Off: accounts can be joint or shared across contracts; deleting may break another customer. Re-enrolment syncs accounts again anyway." },
+
+    { "group": "Anchors", "table": "customer", "column": "id", "using": "customerId" },
+    { "group": "Anchors", "table": "contract", "column": "id", "using": "contractId", "note": "Shared contract: this is the contract itself" }
+  ]
+}
