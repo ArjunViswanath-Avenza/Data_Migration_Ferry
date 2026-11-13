@@ -45,6 +45,9 @@ public class MockTarget {
         public boolean successWithoutId = false;                         // successes carry no ID
         public boolean contractDropsAccounts = false;                    // contract created without its accounts
         public int tokenLifetimeSeconds = 1200;
+        public boolean noApprovalRejected = false;                       // question 8: no-approval ranges answer 87115
+        public boolean groupRuleFlagsOnly = false;                       // question 3: groupRule numbers above 1 answer 87114
+        public boolean rangesPlusOne = false;                            // question 4: ranges must start one above the previous end
     }
 
     private final DataSource db;
@@ -90,6 +93,9 @@ public class MockTarget {
                 "CREATE TABLE featureaction (id VARCHAR(100) PRIMARY KEY, name VARCHAR(100), isApprovalAction INT)",
                 "INSERT INTO featureaction VALUES ('ACH_PAYMENT_CREATE','ACH payment',1),('INTRA_BANK_FUND_TRANSFER_CREATE','Transfer within the bank',1),('BULK_PAYMENT_SINGLE_SUBMIT','Bulk payment',1),('ACCOUNT_VIEW','View accounts',0)",
                 "CREATE TABLE servicedefinition (id VARCHAR(50) PRIMARY KEY, name VARCHAR(100))",
+                "CREATE TABLE approvalmode (id VARCHAR(50) PRIMARY KEY, coreCustomerId VARCHAR(50), contractId VARCHAR(50), isGroupLevel INT, CONSTRAINT IDX_coreCustomerID_ContractId UNIQUE (contractId, coreCustomerId))",
+                "CREATE TABLE approvalmatrix (id BIGINT AUTO_INCREMENT PRIMARY KEY, contractId VARCHAR(50), coreCustomerId VARCHAR(50), actionId VARCHAR(255), accountId VARCHAR(50), approvalruleId VARCHAR(50), isGroupMatrix INT, limitTypeId VARCHAR(50), lowerlimit DECIMAL(20,2), upperlimit DECIMAL(20,2), softdeleteflag INT DEFAULT 0)",
+                "CREATE TABLE signatorygroupmatrix (signatoryGroupMatrixId BIGINT AUTO_INCREMENT PRIMARY KEY, approvalMatrixId BIGINT, groupList VARCHAR(2000), groupRule VARCHAR(2000), softdeleteflag INT DEFAULT 0)",
         };
         try (var c = db.getConnection(); var s = c.createStatement()) {
             for (String d : ddl) s.execute(d);
@@ -133,6 +139,8 @@ public class MockTarget {
                 case "LinkUserToContract" -> linkUser(body, b);
                 case "CreateVirtualUser" -> virtualUser(body, b);
                 case "CreateSignatoryGroup" -> signatoryGroup(body, b);
+                case "UpdateApprovalMatrixMode" -> approvalMode(body);
+                case "CreateApprovalMatrixRule" -> approvalRule(body, b);
                 default -> fail(10351, "Operation " + operation + " is not part of the mock yet");
             };
         } catch (RuntimeException e) {
@@ -225,9 +233,119 @@ public class MockTarget {
         return ok(b.successWithoutId ? null : "id", id);
     }
 
+    private Map<String, Object> approvalMode(Map<String, Object> p) {
+        String contractId = str(p.get("contractId")), cif = str(p.get("cif"));
+        if (count("SELECT COUNT(*) FROM contract WHERE id = :id", contractId) == 0) return fail(10790, "Contract not found for the given ID");
+        int level = "1".equals(str(p.get("isGroupLevel"))) ? 1 : 0;
+        List<Integer> now = jdbc.queryForList("SELECT isGroupLevel FROM approvalmode WHERE contractId = :c AND coreCustomerId = :cif",
+                Map.of("c", contractId, "cif", cif), Integer.class);
+        int current = now.isEmpty() ? 0 : now.get(0);                    // user level is the default
+        if (current == level) return fail(10205, "isGroupMatrix flag is same as the input");
+        if (now.isEmpty())
+            jdbc.update("INSERT INTO approvalmode (id, coreCustomerId, contractId, isGroupLevel) VALUES (:i, :cif, :c, :l)",
+                    new MapSqlParameterSource("i", UUID.randomUUID().toString()).addValue("cif", cif).addValue("c", contractId).addValue("l", level));
+        else jdbc.update("UPDATE approvalmode SET isGroupLevel = :l WHERE contractId = :c AND coreCustomerId = :cif", Map.of("l", level, "c", contractId, "cif", cif));
+        Map<String, Object> ok = ok(null, null);
+        ok.put("status", "Created Successfully");
+        return ok;
+    }
+
+    @SuppressWarnings("unchecked")
+    private Map<String, Object> approvalRule(Map<String, Object> p, Behaviour b) {
+        String contractId = str(p.get("contractId")), cif = str(p.get("cif")), action = str(p.get("actionId")), limitType = str(p.get("limitTypeId"));
+        String account = p.get("accountId") == null ? "" : str(p.get("accountId"));
+        if (count("SELECT COUNT(*) FROM contract WHERE id = :id", contractId) == 0) return fail(10790, "Contract not found for the given ID");
+        if (blank(action) || blank(limitType) || !(p.get("limits") instanceof List<?> raw) || raw.isEmpty()) return fail(10348, "Mandatory input fields are empty.");
+        List<Map<String, Object>> limits = (List<Map<String, Object>>) raw;
+        boolean group = "1".equals(str(p.get("isGroupMatrix")));
+        List<Integer> mode = jdbc.queryForList("SELECT isGroupLevel FROM approvalmode WHERE contractId = :c AND coreCustomerId = :cif", Map.of("c", contractId, "cif", cif), Integer.class);
+        boolean groupMode = !mode.isEmpty() && mode.get(0) == 1;
+        if (group != groupMode) return failReason(10205, "Error while trying to create Approval Rule", 87115, "Given Limit values are not applicable for the Approval mode!");
+
+        // ranges: above the lower value, up to and including the upper; first starts at -1, last ends at -1, no gaps
+        java.math.BigDecimal prevUpper = null;
+        for (int i = 0; i < limits.size(); i++) {
+            java.math.BigDecimal lo = new java.math.BigDecimal(str(limits.get(i).get("lowerlimit"))), hi = new java.math.BigDecimal(str(limits.get(i).get("upperlimit")));
+            boolean first = i == 0, last = i == limits.size() - 1;
+            if (first && lo.compareTo(java.math.BigDecimal.ONE.negate()) != 0) return failReason(10205, "Error while trying to create Approval Rule", 87114, "Invalid values for limit ranges");
+            if (last != (hi.compareTo(java.math.BigDecimal.ONE.negate()) == 0)) return failReason(10205, "Error while trying to create Approval Rule", 87114, "Invalid values for limit ranges");
+            if (!first) {
+                java.math.BigDecimal want = b.rangesPlusOne ? prevUpper.add(java.math.BigDecimal.ONE) : prevUpper;
+                if (lo.compareTo(want) != 0) return failReason(10205, "Error while trying to create Approval Rule", 87114, "Invalid values for limit ranges");
+            }
+            prevUpper = hi;
+        }
+        List<Object[]> rows = new ArrayList<>();
+        for (Map<String, Object> l : limits) {
+            String ruleId = str(l.get("approvalruleId"));
+            boolean none = "NO_APPROVAL".equals(ruleId);
+            if (none && b.noApprovalRejected) return failReason(10205, "Error while trying to create Approval Rule", 87115, "Given Limit values are not applicable for the Approval mode!");
+            String stored, groupList = null, groupRule = null;
+            if (!group) {
+                int n = l.get("numberOfApprovals") == null ? 0 : Integer.parseInt(str(l.get("numberOfApprovals")));
+                List<Map<String, Object>> approvers = (List<Map<String, Object>>) l.getOrDefault("approvers", List.of());
+                if (!none && n == 0) none = true;
+                if (!none) {
+                    if (n < -1 || n > 3 || (n > 0 && approvers.size() < n) || approvers.isEmpty())
+                        return failReason(10205, "Error while trying to create Approval Rule", 87114, "Invalid values for limit ranges");
+                    for (Map<String, Object> a : approvers)
+                        if (count("SELECT COUNT(*) FROM contractcustomers WHERE contractId = :id AND customerId = :n", contractId, str(a.get("approverId"))) == 0)
+                            return fail(21018, "Signatory user not found in contract");
+                }
+                stored = none ? "NO_APPROVAL" : switch (n) { case -1 -> "ALL"; case 1 -> "ANY_ONE"; case 2 -> "ANY_TWO"; default -> "ANY_THREE"; };
+            } else {
+                groupList = str(l.getOrDefault("groupList", "[]"));
+                groupRule = str(l.getOrDefault("groupRule", "[]"));
+                List<String> ids = idList(groupList);
+                List<List<Number>> paths;
+                try { paths = json.mapper().readValue(groupRule, List.class); }
+                catch (Exception e) { return failReason(10205, "Error while trying to create Approval Rule", 87114, "Invalid values for limit ranges"); }
+                for (String gid : ids)
+                    if (count("SELECT COUNT(*) FROM signatorygroup WHERE signatoryGroupId = :id AND contractId = :n", gid, contractId) == 0)
+                        return fail(21018, "Signatory group not found in contract");
+                for (List<Number> path : paths) {
+                    if (path.size() != ids.size()) return failReason(10205, "Error while trying to create Approval Rule", 87114, "Invalid values for limit ranges");
+                    for (int k = 0; k < path.size(); k++) {
+                        int v = path.get(k).intValue();
+                        if (b.groupRuleFlagsOnly && v > 1) return failReason(10205, "Error while trying to create Approval Rule", 87114, "Invalid values for limit ranges");
+                        long members = count("SELECT COUNT(*) FROM customersignatorygroup WHERE signatoryGroupId = :id", ids.get(k));
+                        if (v > members) return failReason(10205, "Error while trying to create Approval Rule", 87114, "Invalid values for limit ranges");
+                    }
+                }
+                stored = none ? "NO_APPROVAL" : null;
+            }
+            rows.add(new Object[]{l.get("lowerlimit"), l.get("upperlimit"), stored, groupList, groupRule});
+        }
+        // a second rule for the same case replaces the first, as the product's own edits do (soft delete)
+        jdbc.update("UPDATE approvalmatrix SET softdeleteflag = 1 WHERE contractId = :c AND coreCustomerId = :cif AND actionId = :a AND limitTypeId = :l AND accountId = :acc",
+                Map.of("c", contractId, "cif", cif, "a", action, "l", limitType, "acc", account));
+        for (Object[] r : rows) {
+            var key = new org.springframework.jdbc.support.GeneratedKeyHolder();
+            jdbc.update("INSERT INTO approvalmatrix (contractId, coreCustomerId, actionId, accountId, approvalruleId, isGroupMatrix, limitTypeId, lowerlimit, upperlimit) " +
+                            "VALUES (:c, :cif, :a, :acc, :r, :g, :l, :lo, :hi)",
+                    new MapSqlParameterSource("c", contractId).addValue("cif", cif).addValue("a", action).addValue("acc", account).addValue("r", r[2])
+                            .addValue("g", group ? 1 : 0).addValue("l", limitType).addValue("lo", new java.math.BigDecimal(str(r[0]))).addValue("hi", new java.math.BigDecimal(str(r[1]))),
+                    key, new String[]{"id"});
+            if (group) jdbc.update("INSERT INTO signatorygroupmatrix (approvalMatrixId, groupList, groupRule) VALUES (:m, :gl, :gr)",
+                    new MapSqlParameterSource("m", key.getKey().longValue()).addValue("gl", r[3]).addValue("gr", r[4]));
+        }
+        return ok(null, null);
+    }
+
+    /** groupList "[id,id]": IDs may be quoted or not. */
+    private static List<String> idList(String s) {
+        String t = s.trim();
+        if (t.startsWith("[")) t = t.substring(1);
+        if (t.endsWith("]")) t = t.substring(0, t.length() - 1);
+        List<String> out = new ArrayList<>();
+        for (String x : t.split(",")) { x = x.trim().replace("\"", ""); if (!x.isEmpty()) out.add(x); }
+        return out;
+    }
+
     public Map<String, Object> state() {
         Map<String, Object> s = new LinkedHashMap<>();
-        for (String t : List.of("contract", "contractcorecustomers", "contractaccounts", "customer", "contractcustomers", "signatorygroup", "customersignatorygroup"))
+        for (String t : List.of("contract", "contractcorecustomers", "contractaccounts", "customer", "contractcustomers", "signatorygroup", "customersignatorygroup",
+                "approvalmode", "approvalmatrix", "signatorygroupmatrix"))
             s.put(t, jdbc.queryForObject("SELECT COUNT(*) FROM " + t, Map.of(), Long.class));
         s.put("calls", calls.get());
         return s;

@@ -65,6 +65,8 @@ public class PlanService {
                 v.put("assumptions", assumptions);
                 v.put("excludedAccounts", excluded);
                 v.put("steps", steps);
+                Map<String, Object> extra = target.summary(view, contract);
+                if (!extra.isEmpty()) v.putAll(extra);
                 voyages.add(v);
 
                 byStatus.merge(vs, 1, Integer::sum);

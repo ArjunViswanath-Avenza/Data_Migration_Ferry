@@ -1,14 +1,57 @@
 {
   "_comment": "Translates the references used in source files into the IDs the target system uses. The values below are neutral examples: replace targetId with the IDs configured in your target (Spotlight / DBXDB).",
   "serviceDefinitions": [
-    { "ref": "RETAIL",   "targetId": "sd-retail-example",   "label": "Retail online banking",   "contractType": "RETAIL" },
-    { "ref": "BUSINESS", "targetId": "sd-business-example", "label": "Business online banking", "contractType": "BUSINESS" }
+    {
+      "ref": "RETAIL",
+      "targetId": "sd-retail-example",
+      "label": "Retail online banking",
+      "contractType": "RETAIL"
+    },
+    {
+      "ref": "BUSINESS",
+      "targetId": "sd-business-example",
+      "label": "Business online banking",
+      "contractType": "BUSINESS"
+    }
   ],
   "roles": [
-    { "ref": "ADMIN",      "targetId": "GROUP_ADMINISTRATOR", "label": "Administrator" },
-    { "ref": "ACCOUNTANT", "targetId": "GROUP_ACCOUNTANT",    "label": "Accountant" },
-    { "ref": "USER",       "targetId": "DEFAULT_GROUP",       "label": "Standard user" }
+    {
+      "ref": "ADMIN",
+      "targetId": "GROUP_ADMINISTRATOR",
+      "label": "Administrator"
+    },
+    {
+      "ref": "ACCOUNTANT",
+      "targetId": "GROUP_ACCOUNTANT",
+      "label": "Accountant"
+    },
+    {
+      "ref": "USER",
+      "targetId": "DEFAULT_GROUP",
+      "label": "Standard user"
+    }
   ],
   "_codeMapsComment": "codeMaps holds named lookup tables used by later build steps, e.g. \"txnCodeToAction\": { \"OAT\": \"TRANSFER_BETWEEN_OWN_ACCOUNT_CREATE\" }.",
-  "codeMaps": {}
+  "codeMaps": {
+    "txnTypeToAction": {
+      "_comment": "Your transaction codes -> target action IDs. An unmapped code is reported, never guessed.",
+      "FT": "INTRA_BANK_FUND_TRANSFER_CREATE",
+      "ACH": "ACH_PAYMENT_CREATE",
+      "BULK": "BULK_PAYMENT_SINGLE_SUBMIT"
+    }
+  },
+  "_approvalActionsComment": "Per service definition: the actions a '*' source rule expands to (A-05). Take them from the bank's configuration; the Survey shows how many the target flags (featureaction.isApprovalAction).",
+  "approvalActions": {
+    "BUSINESS": [
+      "ACH_PAYMENT_CREATE",
+      "INTRA_BANK_FUND_TRANSFER_CREATE",
+      "BULK_PAYMENT_SINGLE_SUBMIT"
+    ]
+  },
+  "approvalSettings": {
+    "_comment": "How source approval rules are read. openUpperFrom: your system's 'no upper limit' value; userModeThreshold: the 80/20 rule.",
+    "openUpperFrom": "999999999",
+    "userModeThreshold": 0.8,
+    "defaultLimitType": "MAX_TRANSACTION_LIMIT"
+  }
 }

@@ -6,6 +6,9 @@ const SWITCHES = [
   ["successWithoutId", "Answers carry no ID", "Read-back must find the new ID (contract and group do; users stop the run)."],
   ["contractDropsAccounts", "Contracts lose their accounts", "Read-back mismatch: the run pauses on the first contract."],
   ["linkUserUnsupported", "Core not supported for linked users", "LinkUserToContract answers 10001 (question 1)."],
+  ["noApprovalRejected", "No-approval ranges refused", "Question 8: a NO_APPROVAL range answers 87115, as the vendor's Postman sample did."],
+  ["groupRuleFlagsOnly", "groupRule is 1/0 only", "Question 3: a count above 1 in a group answers 87114."],
+  ["rangesPlusOne", "Ranges start one above the previous end", "Question 4: the earlier tool's convention; Ferry's shared boundaries are refused."],
 ];
 const NUMBERS = [
   ["latencyMs", "Delay per call (ms)"],

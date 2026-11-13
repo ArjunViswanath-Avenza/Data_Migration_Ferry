@@ -84,6 +84,33 @@ export default function PlanCard({ batch, onChanged, version }) {
 }
 
 const MARK = { PLANNED: ["planned", "chevronRight"], BLOCKED: ["blocked", "xCircle"], ALREADY_DONE: ["done", "check"] };
+const COMPLEXITY = { EASY: "ok", MEDIUM: "info", HARD: "warn" };
+
+/** The approval design per customer: mode, why, groups designed, and what is held back for the bank. */
+function Approvals({ list }) {
+  return (
+    <div className="ap-design">
+      {list.map((a) => (
+        <div key={a.cif} className="ap-cust">
+          <div className="row" style={{ gap: 8 }}>
+            <b>Approval rules for CIF <code>{a.cif}</code></b>
+            <Badge tone="brand">{a.mode === "GROUP" ? "signatory-group mode" : "user mode"}</Badge>
+            <Badge tone={COMPLEXITY[a.complexity]}>{a.complexity.toLowerCase()}</Badge>
+            <span className="xs muted">{a.userCompatible} of {a.contexts} contexts fit user mode · {plural(a.rules, "rule call")}</span>
+          </div>
+          {a.groups.length > 0 && (
+            <div className="xs">Groups designed: {a.groups.map((g) => <span key={g.name} className="ap-group"><b>{g.name}</b> ({g.members.join(", ")})</span>)}</div>
+          )}
+          {a.notes.map((n) => <div key={n} className="xs muted">{n}</div>)}
+          {a.problems.map((p, i) => (
+            <div key={i} className="ap-problem xs"><Badge tone="warn">{p.code.replaceAll("_", " ").toLowerCase()}</Badge> {p.message}
+              <span className="muted"> Source rule{p.rules.length === 1 ? "" : "s"}: {p.rules.join(", ") || "—"}.</span></div>
+          ))}
+        </div>
+      ))}
+    </div>
+  );
+}
 
 function Voyage({ v, isOpen, toggle }) {
   const [payloadOf, setPayloadOf] = useState(null);
@@ -103,6 +130,7 @@ function Voyage({ v, isOpen, toggle }) {
       {isOpen && (
         <tr className="expanded">
           <td colSpan={7}>
+            {v.approvals?.length > 0 && <Approvals list={v.approvals} />}
             <ol className="timeline">
               {v.steps.map((s) => {
                 const [cls, icon] = MARK[s.status] || ["planned", "chevronRight"];

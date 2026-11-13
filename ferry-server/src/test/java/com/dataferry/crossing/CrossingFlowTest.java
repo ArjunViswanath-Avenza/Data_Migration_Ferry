@@ -30,6 +30,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class CrossingFlowTest {
 
     static final int PORT = 18195;
+    static Path REFERENCE;
 
     @DynamicPropertySource
     static void props(DynamicPropertyRegistry r) throws Exception {
@@ -42,10 +43,14 @@ class CrossingFlowTest {
             }
         }
         Path env = dst.resolve("environments.json");
-        Files.writeString(env, Files.readString(env).replace("localhost:8095", "localhost:" + PORT));
+        Files.writeString(env, Files.readString(env).replace("127.0.0.1:8095", "127.0.0.1:" + PORT));
         Path cr = dst.resolve("crossing.json");
-        Files.writeString(cr, Files.readString(cr).replace("\"requestTimeoutSeconds\": 60", "\"requestTimeoutSeconds\": 2")
-                .replace("\"backoffSeconds\": [2, 5, 15]", "\"backoffSeconds\": [0, 0, 0]"));
+        ObjectMapper json = new ObjectMapper();
+        var tree = (com.fasterxml.jackson.databind.node.ObjectNode) json.readTree(cr.toFile());
+        tree.put("requestTimeoutSeconds", 2);
+        ((com.fasterxml.jackson.databind.node.ObjectNode) tree.get("retry")).putArray("backoffSeconds").add(0).add(0).add(0);
+        json.writerWithDefaultPrettyPrinter().writeValue(cr.toFile(), tree);
+        REFERENCE = dst.resolve("reference-data.json");
         r.add("server.port", () -> PORT);
         r.add("ferry.config-dir", dst::toString);
         r.add("ferry.data-dir", () -> "target/test-data/crossing-" + System.nanoTime());
@@ -138,7 +143,16 @@ class CrossingFlowTest {
         assertEquals(b.get("contract").get("target_id").asText(), om.readTree(b.get("user:acme.maker").get("request_json").asText()).get("contractId").asText(),
                 "the user's contractId placeholder was filled from the register");
 
+        JsonNode rule = b.get("rule:045000100:04510000010001:ACH_PAYMENT_CREATE:MAX_TRANSACTION_LIMIT");
+        assertEquals("SUCCESS", rule.get("outcome").asText(), rule.toString());
+        assertTrue(rule.get("read_back").asText().contains("\"verdict\":\"MATCH\""), rule.toString());
+        JsonNode sent = om.readTree(rule.get("request_json").asText());
+        assertEquals(b.get("user:acme.admin").get("target_id").asText(), sent.get("limits").get(1).get("approvers").get(0).get("approverId").asText(),
+                "approver placeholders inside limits[] were filled");
+
         JsonNode state = get("/api/mock/state");
+        assertEquals(12, state.get("approvalmatrix").asInt(), "3 actions x 2 accounts x 2 ranges");
+        assertEquals(0, state.get("approvalmode").asInt(), "user mode is the default: no mode call (A-14)");
         assertEquals(2, state.get("contract").asInt());
         assertEquals(3, state.get("contractaccounts").asInt());
         assertEquals(4, state.get("customer").asInt());
@@ -224,6 +238,43 @@ class CrossingFlowTest {
         JsonNode blocked = post("/api/crossing/survey", Map.of("batchId", batch, "source", "MOCK", "performedBy", "tester"));
         assertEquals("NO_GO", blocked.get("verdict").asText());
         assertEquals(List.of("B-1001"), om.convertValue(blocked.get("blockedContracts"), List.class));
+    }
+
+    @Test
+    void aRefusedNoApprovalFormatLeavesTheContractPartlyDone() throws Exception {
+        mock.behaviour().noApprovalRejected = true;
+        String batch = plannedBatch();
+        JsonNode done = waitFor(start(batch, 0, 1).get("run_id").asText(), "COMPLETED");
+        assertEquals("PARTIAL", outcome(done, "B-1001"));
+        JsonNode rule = steps(done.get("run_id").asText(), "B-1001").get("rule:045000100:04510000010001:ACH_PAYMENT_CREATE:MAX_TRANSACTION_LIMIT");
+        assertEquals("FAILED", rule.get("outcome").asText());
+        assertEquals("87115", rule.get("error_code").asText());
+    }
+
+    @Test
+    void groupModeDesignsTheGroupSetsTheModeAndSendsCounts() throws Exception {
+        String original = Files.readString(REFERENCE);
+        try {
+            Files.writeString(REFERENCE, original.replace("\"userModeThreshold\": 0.8", "\"userModeThreshold\": 1.1"));
+            post("/api/platform/config/reload", Map.of("performedBy", "tester"));
+            String batch = plannedBatch();
+            JsonNode done = waitFor(start(batch, 0, 1).get("run_id").asText(), "COMPLETED");
+            assertEquals("SUCCESS", outcome(done, "B-1001"), done.toString());
+            Map<String, JsonNode> b = steps(done.get("run_id").asText(), "B-1001");
+            assertEquals("SUCCESS", b.get("group:~SENIOR").get("outcome").asText(), b.keySet().toString());
+            assertEquals("SUCCESS", b.get("mode:045000100").get("outcome").asText());
+            JsonNode rule = b.get("rule:045000100:04510000010001:ACH_PAYMENT_CREATE:MAX_TRANSACTION_LIMIT");
+            assertEquals("SUCCESS", rule.get("outcome").asText(), rule.toString());
+            JsonNode sent = om.readTree(rule.get("request_json").asText());
+            assertEquals("[[2]]", sent.get("limits").get(1).get("groupRule").asText(), "2 approvals from one group of two (A-02 COUNTS)");
+            assertEquals("[" + b.get("group:~SENIOR").get("target_id").asText() + "]", sent.get("limits").get(1).get("groupList").asText());
+            JsonNode state = get("/api/mock/state");
+            assertEquals(1, state.get("approvalmode").asInt());
+            assertEquals(12, state.get("signatorygroupmatrix").asInt());
+        } finally {
+            Files.writeString(REFERENCE, original);
+            post("/api/platform/config/reload", Map.of("performedBy", "tester"));
+        }
     }
 
     @Test

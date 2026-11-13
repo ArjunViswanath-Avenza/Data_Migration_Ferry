@@ -1,5 +1,7 @@
 server:
   port: ${FERRY_PORT:8095}
+  # Listen on this machine only: the server has no login yet. Set FERRY_BIND=0.0.0.0 to open it to the network on purpose.
+  address: ${FERRY_BIND:127.0.0.1}
 
 spring:
   application:

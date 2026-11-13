@@ -17,6 +17,10 @@ public class CrossingConfig extends Strict {
     public int tokenRenewBeforeSeconds = 120;
     public int defaultTokenLifetimeSeconds = 1200;
     public ResultIds resultIds = new ResultIds();
+    /** Operations whose answer carries no ID: success is recorded as done, and read-back proves it. */
+    public List<String> noIdNeeded = new ArrayList<>();
+    /** Error codes that mean "already so" for an operation, e.g. a mode already set (10205). */
+    public Map<String, List<String>> alreadyDone = new LinkedHashMap<>();
     public ReadBackChecks readBack = new ReadBackChecks();
 
     public static class StopRules extends Strict {

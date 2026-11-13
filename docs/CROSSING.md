@@ -5,8 +5,15 @@ It is built to work **without the vendor's answers** to the open questions: ever
 run goes, and the run pauses on its own when a guess looks wrong. The reasoning behind this is in
 [PROCEEDING_WITHOUT_ANSWERS.md](PROCEEDING_WITHOUT_ANSWERS.md).
 
-This build covers contracts, linked users, virtual users and signatory groups: everything Boarding plans
-today. Approval rules, limits and payees come in later build steps.
+This build covers contracts, linked users, virtual users, signatory groups and **approval rules**:
+
+- designed groups
+- `UpdateApprovalMatrixMode` (an already-set mode, error 10205, counts as done)
+- `CreateApprovalMatrixRule`
+
+The approval calls answer without an ID. They are recorded as done (`noIdNeeded`), and read-back proves each
+one: one stored range per range sent, no-approval ranges stored as `NO_APPROVAL`, and group conditions stored.
+Limits and payees come in a later build step. The approval design is in [APPROVAL_RULES.md](APPROVAL_RULES.md).
 
 ## How a run goes
 
@@ -79,6 +86,9 @@ question could go:
 | Core not supported for linked users | Question 1: LinkUserToContract answers 10001 |
 | CIFs whose contract name clashes | Question 5: error 10401 |
 | Fields a virtual user must have | Question 6 |
+| No-approval ranges refused | Question 8: `NO_APPROVAL` answers 87115, as in the vendor's Postman sample |
+| groupRule is 1/0 only | Question 3: a count above 1 answers 87114 |
+| Ranges start one above the previous end | Question 4: the earlier tool's +1 convention |
 | Delay, throttle every Nth call, server error every Nth call, late answers, token lifetime | Question 16 and network trouble |
 
 **Reset mock** empties its database.
@@ -134,7 +144,7 @@ The 9 tests cover:
 
 ## Not yet
 
-- Approval rules (build step 5), limits and payees (step 6), and Manifest's own reconciliation (step 4).
+- Limits and payees (step 6), and Manifest's own reconciliation (step 4).
 - Sea trials S0–S8: they use this engine against UAT once the bank provides access.
 - A lookup for users that time out. It is left out on purpose: no reliable key is known yet, so such a
   step stops the run as `UNKNOWN` instead of guessing.

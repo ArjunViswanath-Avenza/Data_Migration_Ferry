@@ -1,4 +1,29 @@
-# Approval rules — design (v0.2, draft for review)
+# Approval rules — design (v0.3, built 12 Nov 2026)
+
+> **Status: Route B is built.** The converter (C1–C5) is `ferry-server/…/target/temenos/ApprovalConverter.java`.
+> Boarding plans these steps, in this order:
+> designed signatory groups, then `UpdateApprovalMatrixMode` (group-level customers only), then one
+> `CreateApprovalMatrixRule` per account, action and limit type. Crossing sends them and checks every rule in the
+> database. The mock target answers both APIs, with switches for questions 3, 4 and 8. Tests are in
+> `ApprovalConverterTest` (10) and `CrossingFlowTest` (user and group mode end to end).
+>
+> **Changes from v0.2:**
+> - **Encodings now follow the product's own data** (docs/PROCEEDING_WITHOUT_ANSWERS.md):
+>   - A-02 is COUNTS.
+>   - Open ends are `-1.00`.
+>   - No-approval ranges are explicit `NO_APPROVAL`; in group mode, `groupList "[]"` and `groupRule "[]"`, to
+>     be confirmed by sea trial S4.
+>   - A-06 sends non-monetary rules as `NON_MONETARY_LIMIT` -1/-1.
+>   - A-15 keeps rules per account.
+> - **Reference data** gains `approvalActions` (per service definition), `codeMaps.txnTypeToAction` and
+>   `approvalSettings`: the bank's "no upper limit" value, the 80/20 threshold and the default limit type.
+> - **Rules that cannot be converted faithfully** are held back as Boarding findings (`AP_<CODE>`, WARN) and listed
+>   in the plan's approval summary. They are never guessed.
+> - **Route A** (target-shaped APPROVAL_MODE / APPROVAL_RULE sheets) and the decision-report workbook are not built
+>   yet.
+> - **Account scope:** `accountId` is compared as `''` for contract-wide rules. The product stores 290 such rules
+>   with a blank account; whether that is `''` or NULL is to be confirmed in UAT.
+
 
 How Data Migration Ferry turns a source system's approval rules (maker/checker, self-approval,
 checker groups) into Temenos Digital approval-matrix setup: signatory groups, approval mode and

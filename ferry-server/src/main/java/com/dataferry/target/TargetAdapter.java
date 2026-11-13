@@ -26,6 +26,9 @@ public interface TargetAdapter {
     /** Builds the ordered steps for one contract. */
     List<PlannedStep> plan(BatchView batch, StagedRecord contract);
 
+    /** Extra facts about one contract's plan for the reviewer (e.g. the approval design); empty by default. */
+    default Map<String, Object> summary(BatchView batch, StagedRecord contract) { return Map.of(); }
+
     record FindingOnRecord(StagedRecord record, Finding finding) {}
 
     /**

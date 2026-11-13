@@ -46,7 +46,7 @@ public class CrossingService {
 
     private static final Logger log = LoggerFactory.getLogger(CrossingService.class);
     private static final Pattern PLACEHOLDER = Pattern.compile("\\{\\{([A-Z_]+):([^{}]+)\\.(\\w+)\\}\\}");
-    private static final Map<String, String> TARGET_TYPE = Map.of("CONTRACT", "contractId", "USER", "customerId", "SIGNATORY_GROUP", "signatoryGroupId");
+    private static final Map<String, String> TARGET_TYPE = Map.of("CONTRACT", "contractId", "USER", "customerId", "SIGNATORY_GROUP", "signatoryGroupId", "APPROVAL_MODE", "mode", "APPROVAL_RULE", "rule");
 
     private final ConfigStore config;
     private final BatchStore batches;
@@ -398,6 +398,12 @@ public class CrossingService {
                 else sleep(secs * 1000);
             }
 
+            boolean noId = cfg.noIdNeeded.contains(op);
+            if (resp.kind() == FabricClient.Kind.UNKNOWN && noId && readBack.enabled()) {
+                params.put("id", "DONE");
+                if (readBack.verify(op, params).verdict().equals("MATCH"))
+                    return succeed(ref, s, "RECOVERED", attempts, "DONE", payload, params, resp, millis, "No answer in time, but read-back found the result.");
+            }
             if (resp.kind() == FabricClient.Kind.UNKNOWN) {
                 Optional<String> found = readBack.lookup(op, params);
                 if (found.isPresent()) return succeed(ref, s, "RECOVERED", attempts, found.get(), payload, params, resp, millis,
@@ -409,6 +415,8 @@ public class CrossingService {
                 return record(ref, s, "FAILED", attempts, null, String.valueOf(resp.httpStatus()), "Gave up after " + attempts + " attempts: " + resp.text(), payload, resp, null, millis);
 
             String error = judge(resp);
+            if (error != null && cfg.alreadyDone.getOrDefault(op, List.of()).contains(String.valueOf(resp.body().get("dbpErrCode"))))
+                return succeed(ref, s, "ALREADY_DONE", attempts, "DONE", payload, params, resp, millis, "The target says it is already so: " + error);
             if (error != null) {
                 String code = errorCode(resp.body());
                 String catalogue = code == null ? null : temenos.errorCatalogue.get("ERR_" + code);
@@ -417,6 +425,7 @@ public class CrossingService {
             String newId = null;
             for (String f : cfg.resultIds.byOperation.getOrDefault(op, List.of("id")))
                 if (resp.body().get(f) != null && !String.valueOf(resp.body().get(f)).isBlank()) { newId = String.valueOf(resp.body().get(f)); break; }
+            if (newId == null && noId) newId = "DONE";
             if (newId == null) {
                 Optional<String> found = readBack.lookup(op, params);
                 if (found.isPresent()) return succeed(ref, s, "RECOVERED", attempts, found.get(), payload, params, resp, millis, "The answer had no ID; read-back found it.");
@@ -497,23 +506,26 @@ public class CrossingService {
     /** Fills {{TYPE:ref.field}} from the ID register; a missing ID means an earlier step did not succeed. */
     Map<String, Object> resolve(Map<String, Object> planned) {
         Map<String, Object> out = new LinkedHashMap<>();
-        for (Map.Entry<String, Object> e : planned.entrySet()) {
-            Object v = e.getValue();
-            if (v instanceof String s && s.contains("{{")) {
-                Matcher m = PLACEHOLDER.matcher(s);
-                StringBuilder sb = new StringBuilder();
-                while (m.find()) {
-                    String found = register.find(m.group(1), m.group(2))
-                            .orElseThrow(() -> new IllegalStateException("No ID yet for " + m.group(1).toLowerCase(Locale.ROOT) + " " + m.group(2) + "."));
-                    m.appendReplacement(sb, Matcher.quoteReplacement(found));
-                }
-                m.appendTail(sb);
-                if (sb.toString().contains("{{")) throw new IllegalStateException("The request still holds an unfilled value: " + sb);
-                v = sb.toString();
-            }
-            out.put(e.getKey(), v);
-        }
+        for (Map.Entry<String, Object> e : planned.entrySet()) out.put(e.getKey(), fill(e.getValue()));
         return out;
+    }
+
+    /** Placeholders can sit anywhere: in strings, and inside lists and maps (approval rule limits). */
+    @SuppressWarnings("unchecked")
+    private Object fill(Object v) {
+        if (v instanceof Map<?, ?> m) return resolve((Map<String, Object>) m);
+        if (v instanceof List<?> l) return l.stream().map(this::fill).toList();
+        if (!(v instanceof String s) || !s.contains("{{")) return v;
+        Matcher m = PLACEHOLDER.matcher(s);
+        StringBuilder sb = new StringBuilder();
+        while (m.find()) {
+            String found = register.find(m.group(1), m.group(2))
+                    .orElseThrow(() -> new IllegalStateException("No ID yet for " + m.group(1).toLowerCase(Locale.ROOT) + " " + m.group(2) + "."));
+            m.appendReplacement(sb, Matcher.quoteReplacement(found));
+        }
+        m.appendTail(sb);
+        if (sb.toString().contains("{{")) throw new IllegalStateException("The request still holds an unfilled value: " + sb);
+        return sb.toString();
     }
 
     /** Request fields plus the counts read-back checks compare with. */
@@ -529,6 +541,14 @@ public class CrossingService {
                 p.put("accountCount", n);
             }
             if (payload.get("signatories") instanceof String s) p.put("signatoryCount", (long) om.readValue(s, List.class).size());
+            if (payload.get("limits") instanceof List<?> limits) {
+                p.put("rangeCount", (long) limits.size());
+                p.put("noApprovalCount", limits.stream().filter(l -> l instanceof Map<?, ?> m && "NO_APPROVAL".equals(m.get("approvalruleId"))).count());
+                p.put("groupRangeCount", limits.stream().filter(l -> l instanceof Map<?, ?> m && m.get("groupList") != null).count());
+                p.remove("limits");
+            }
+            p.putIfAbsent("accountId", null);
+            p.put("accountKey", payload.get("accountId") == null ? "" : payload.get("accountId"));
         } catch (Exception ignored) { /* counts stay absent; the check then fails visibly */ }
         return p;
     }

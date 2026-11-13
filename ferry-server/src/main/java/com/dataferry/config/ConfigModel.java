@@ -64,6 +64,18 @@ public final class ConfigModel {
         public List<Role> roles = new ArrayList<>();
         /** Named lookup tables for later steps, e.g. sourceTxnCode -> actionId. */
         public Map<String, Map<String, String>> codeMaps = new LinkedHashMap<>();
+        /** Service definition ref -> the target actions that take approval rules ("*" in a source rule expands to these, A-05). */
+        public Map<String, List<String>> approvalActions = new LinkedHashMap<>();
+        public ApprovalSettings approvalSettings = new ApprovalSettings();
+    }
+
+    public static class ApprovalSettings extends Strict {
+        /** A source toAmount at or above this means "no upper limit" (the bank's own sentinel). */
+        public String openUpperFrom = "999999999";
+        /** Share of a customer's contexts that must fit user mode for the customer to stay in user mode (the 80/20 rule). */
+        public double userModeThreshold = 0.8;
+        /** Limit type used when the source rule does not say (A-05). */
+        public String defaultLimitType = "MAX_TRANSACTION_LIMIT";
     }
 
     public static class ServiceDefinition extends Strict {

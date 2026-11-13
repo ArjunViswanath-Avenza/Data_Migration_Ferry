@@ -259,3 +259,9 @@ details[open] > summary::before { transform: rotate(90deg); }
 .timeline .head b { font-size: var(--text-sm); }
 .timeline .detail { font-size: var(--text-xs); color: var(--muted); margin-top: 3px; }
 .timeline .reason { font-size: var(--text-xs); color: var(--danger); margin-top: 3px; }
+
+/* Approval design in the Boarding plan */
+.ap-design { display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px; }
+.ap-cust { display: flex; flex-direction: column; gap: 6px; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); }
+.ap-group { margin-right: 10px; }
+.ap-problem { display: flex; flex-wrap: wrap; gap: 6px; align-items: baseline; }

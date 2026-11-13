@@ -6,7 +6,7 @@ A standalone, one-stop tool that carries customer data from **any source system*
 | Area | What it does | Status |
 |---|---|---|
 | **Boarding** | Load source files, map them to the canonical model, validate, and build a dry-run plan per contract | Built |
-| **Crossing** | Execute the plan against the target: survey first, read-back after every call, pilot and stop rules, built-in mock target | Built (contracts, users, groups) |
+| **Crossing** | Execute the plan against the target: survey first, read-back after every call, pilot and stop rules, built-in mock target | Built (contracts, users, groups, approval rules) |
 | **Manifest** | Results per item and step, ID register, reconciliation, exceptions, Excel export | Planned |
 | **Return Crossing** | Roll back selected contracts or users through the vendor delete API | Planned |
 | **Disembark** (Tools) | Un-enrol one customer from the Temenos Digital database: reviewable script, read-only preview, or (when switched on) a guarded delete | Built |
@@ -21,6 +21,9 @@ files are in [templates/](templates/). Dry Dock, the schema comparison tool, is 
 [docs/DRY_DOCK.md](docs/DRY_DOCK.md), and Disembark, the single-customer un-enrolment utility, in
 [docs/DISEMBARK.md](docs/DISEMBARK.md). How Crossing, the Survey and the mock target work is in [docs/CROSSING.md](docs/CROSSING.md),
 and how Ferry proceeds without the vendor's answers is in [docs/PROCEEDING_WITHOUT_ANSWERS.md](docs/PROCEEDING_WITHOUT_ANSWERS.md).
+
+The server listens on this machine only (127.0.0.1). Set `FERRY_BIND=0.0.0.0` only when you mean to open it to
+the network; it has no login yet.
 
 ## Run it
 
